@@ -1,0 +1,8 @@
+[submodule "vendor/tmx"]
+	path = vendor/tmx
+	url = https://github.com/baylej/tmx.git
+    ignore = dirty
+[submodule "vendor/raylib"]
+	path = vendor/raylib
+	url = https://github.com/raysan5/raylib.git
+    ignore = dirty
