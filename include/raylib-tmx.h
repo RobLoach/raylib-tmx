@@ -98,6 +98,16 @@ tmx_map* LoadTMX(const char* fileName) {
     }
     TraceLog(LOG_INFO, "TMX: Loaded %ix%i map", map->width, map->height);
     return map;
+
+    // TODO: Use https://github.com/baylej/tmx/pull/58
+    // const char* fileText = LoadFileText(fileName);
+    // tmx_map* map = tmx_load_buffer_path(fileText, TextLength(fileText), fileName);
+    // if (!map) {
+    //     TraceLog(LOG_ERROR, "TMX: Failed to load TMX file %s", fileName);
+    //     return NULL;
+    // }
+    // TraceLog(LOG_INFO, "TMX: Loaded %ix%i map", map->width, map->height);
+    // return map;
 }
 
 void UnloadTMX(tmx_map* map) {
@@ -108,7 +118,7 @@ void UnloadTMX(tmx_map* map) {
 }
 
 #ifndef RAYLIB_TMX_LINE_THICKNESS
-#define RAYLIB_TMX_LINE_THICKNESS 2.5f
+#define RAYLIB_TMX_LINE_THICKNESS 3.0f
 #endif
 
 void DrawTMXPolyline(double offset_x, double offset_y, double **points, int points_count, Color color) {
@@ -129,6 +139,35 @@ void DrawTMXPolygon(double offset_x, double offset_y, double **points, int point
 	}
 }
 
+void DrawTMXText(tmx_text* text, Rectangle dest, Color tint) {
+    float fontSize = (float)text->pixelsize;
+    const char* message = text->text;
+    Font font = GetFontDefault();
+    // TODO: Figure out the correct spacing.
+    float spacing = (float)text->kerning * fontSize / 12.0f;
+
+    if (text->wrap == 0) {
+        Vector2 textSize = MeasureTextEx(font, message, fontSize, spacing);
+        Vector2 position = {dest.x, dest.y};
+        if (text->halign == HA_CENTER) {
+            position.x = dest.x + dest.width / 2.0f - textSize.x / 2.0f;
+        }
+        else if (text->halign == HA_RIGHT) {
+            position.x = dest.x + dest.width - textSize.x;
+        }
+        if (text->valign == VA_CENTER) {
+            position.y = dest.y + dest.height / 2.0f - textSize.y / 2.0f;
+        }
+        else if (text->valign == VA_BOTTOM) {
+            position.y = dest.y + dest.height - textSize.y;
+        }
+        DrawTextEx(font, message, position, fontSize, spacing, tint);
+    }
+    else {
+        DrawTextRec(font, message, dest, fontSize, spacing, true, tint);
+    }
+}
+
 void DrawTMXLayerObjects(tmx_object_group *objgr, int posX, int posY, Color tint) {
 	tmx_object *head = objgr->head;
 	Color color = ColorFromTMX(objgr->color);
@@ -142,25 +181,31 @@ void DrawTMXLayerObjects(tmx_object_group *objgr, int posX, int posY, Color tint
                 (float)head->width,
                 (float)head->height
             };
-			if (head->obj_type == OT_SQUARE) {
-				DrawRectangleLinesEx(dest, (int)RAYLIB_TMX_LINE_THICKNESS, color);
-			}
-			else if (head->obj_type  == OT_POLYGON) {
-				DrawTMXPolygon(dest.x, dest.y, head->content.shape->points, head->content.shape->points_len, color);
-			}
-			else if (head->obj_type == OT_POLYLINE) {
-				DrawTMXPolyline(dest.x, dest.y, head->content.shape->points, head->content.shape->points_len, color);
-			}
-			else if (head->obj_type == OT_ELLIPSE) {
-				DrawEllipseLines(dest.x + head->width / 2.0f, dest.y + head->height / 2.0f, head->width / 2.0f, head->height / 2.0f, color);
-            } else if (head->obj_type == OT_TEXT) {
-                tmx_text* text = head->content.text;
-                int size = text->pixelsize;
-                const char* msg = text->text;
-                Color color = ColorFromTMX(text->color);
-                color.a = tint.a;
-                // TODO: Wrap the text
-                DrawText(msg, (int)dest.x, (int)dest.y, size, color);
+            switch (head->obj_type) {
+                case OT_SQUARE:
+				    DrawRectangleLinesEx(dest, (int)RAYLIB_TMX_LINE_THICKNESS, color);
+                    break;
+                case OT_POLYGON:
+                    DrawTMXPolygon(dest.x, dest.y, head->content.shape->points, head->content.shape->points_len, color);
+                    break;
+                case OT_POLYLINE:
+                    DrawTMXPolyline(dest.x, dest.y, head->content.shape->points, head->content.shape->points_len, color);
+                    break;
+                case OT_ELLIPSE:
+                    DrawEllipseLines(dest.x + head->width / 2.0f, dest.y + head->height / 2.0f, head->width / 2.0f, head->height / 2.0f, color);
+                    break;
+                case OT_TILE:
+                    // TODO: Draw an individual tile.
+                    break;
+                case OT_TEXT: {
+                    tmx_text* text = head->content.text;
+                    Color textColor = ColorFromTMX(text->color);
+                    textColor.a = tint.a;
+                    DrawTMXText(text, dest, textColor);
+                } break;
+                case OT_POINT:
+                    DrawCircle(dest.x + head->width / 2.0f, dest.y + head->height / 2.0f, 5, color);
+                    break;
             }
 		}
 		head = head->next;
@@ -213,18 +258,20 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
 void DrawTMXLayer(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint) {
 	while (layers) {
 		if (layers->visible) {
-			if (layers->type == L_GROUP) {
-				DrawTMXLayer(map, layers->content.group_head, posX, posY, tint); // recursive call
-			}
-			else if (layers->type == L_OBJGR) {
-				DrawTMXLayerObjects(layers->content.objgr, posX, posY, tint);
-			}
-			else if (layers->type == L_IMAGE) {
-                DrawTMXLayerImage(layers->content.image, layers->offsetx + posX, layers->offsety + posY, tint);
-			}
-			else if (layers->type == L_LAYER) {
-				DrawTMXLayerTiles(map, layers, posX, posY, tint);
-			}
+            switch (layers->type) {
+                case L_GROUP:
+                    DrawTMXLayer(map, layers->content.group_head, layers->offsetx + posX, layers->offsety + posY, tint); // recursive call
+                    break;
+                case L_OBJGR:
+                    DrawTMXLayerObjects(layers->content.objgr, layers->offsetx + posX, layers->offsety + posY, tint);
+                    break;
+                case L_IMAGE:
+                    DrawTMXLayerImage(layers->content.image, layers->offsetx + posX, layers->offsety + posY, tint);
+                    break;
+                case L_LAYER:
+                    DrawTMXLayerTiles(map, layers, layers->offsetx + posX, layers->offsety + posY, tint);
+                    break;
+            }
 		}
 		layers = layers->next;
 	}
