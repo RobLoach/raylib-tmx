@@ -217,39 +217,67 @@ void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
 	DrawTexture(*texture, posX, posY, tint);
 }
 
-void DrawTMXTile(void *image, unsigned int sx, unsigned int sy, unsigned int sw, unsigned int sh,
-               int dx, int dy, float opacity, unsigned int flags, Color tint) {
-    Texture2D *texture = (Texture2D*)image;
-    Color newTint = ColorAlpha(tint, opacity);
-    DrawTextureRec(*texture, (Rectangle) {sx, sy, sw, sh}, (Vector2) {dx, dy}, newTint);
+void DrawTMXTileV(tmx_tileset* ts, tmx_tile* tile, Vector2 destination, Color tint) {
+    Texture* image;
+    Rectangle srcRect;
+    tmx_image *im = tile->image;
+    srcRect.x  = tile->ul_x;
+    srcRect.y  = tile->ul_y;
+    srcRect.width  = tile->tileset->tile_width;
+    srcRect.height = tile->tileset->tile_height;
+    if (im) {
+        image = (Texture*)im->resource_image;
+    }
+    else {
+        image = (Texture*)tile->tileset->image->resource_image;
+    }
+
+    //flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
+
+    // Draw
+    DrawTextureRec(*image, srcRect, destination, tint);
 }
 
 void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint) {
-	unsigned long i, j;
-	unsigned int gid, x, y, w, h, flags;
-	float op;
+	long i, j;
+	unsigned int gid, baseGid; //, flags;
+    Rectangle srcRect;
+	float opacity;
+    Vector2 destination;
 	tmx_tileset *ts;
 	tmx_image *im;
-	void* image;
-	op = layer->opacity;
+	Texture2D* image;
+	opacity = (float)layer->opacity;
+    Color newTint = ColorAlpha(tint, opacity);
 	for (i=0; i<map->height; i++) {
 		for (j=0; j<map->width; j++) {
-			gid = (layer->content.gids[(i*map->width)+j]) & TMX_FLIP_BITS_REMOVAL;
+            baseGid = layer->content.gids[(i*map->width)+j];
+			gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
 			if (map->tiles[gid] != NULL) {
+                // destination.x = (float)(j * ts->tile_width + posX);
+                // destination.y = (float)(i * ts->tile_height + posY);
+                // DrawTMXTileV(ts, map->tiles[gid], destination, newTint);
+                // continue;
+
 				ts = map->tiles[gid]->tileset;
 				im = map->tiles[gid]->image;
-				x  = map->tiles[gid]->ul_x;
-				y  = map->tiles[gid]->ul_y;
-				w  = ts->tile_width;
-				h  = ts->tile_height;
+				srcRect.x  = map->tiles[gid]->ul_x;
+				srcRect.y  = map->tiles[gid]->ul_y;
+				srcRect.width  = ts->tile_width;
+				srcRect.height = ts->tile_height;
 				if (im) {
-                    image = im->resource_image;
+                    image = (Texture*)im->resource_image;
 				}
 				else {
-                    image = ts->image->resource_image;
+                    image = (Texture*)ts->image->resource_image;
 				}
-				flags = (layer->content.gids[(i*map->width)+j]) & ~TMX_FLIP_BITS_REMOVAL;
-                DrawTMXTile(image, x, y, w, h, j*ts->tile_width + posX, i*ts->tile_height + posY, op, flags, tint);
+
+				//flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
+
+                // Draw
+                destination.x = (float)(j * ts->tile_width + posX);
+                destination.y = (float)(i * ts->tile_height + posY);
+                DrawTextureRec(*image, srcRect, destination, newTint);
 			}
 		}
 	}
