@@ -2,17 +2,18 @@
 
 Load [Tiled](https://www.mapeditor.org) `.tmx` files for tile maps in [raylib](https://www.raylib.com), with [TMX C Loader](https://github.com/baylej/tmx).
 
-![examples/raylib-tmx-example.png](examples/raylib-tmx-example.png)
+![example/raylib-tmx-example.png](example/raylib-tmx-example.png)
 
 ## Usage
 
-In your project, make sure to link its dependencies:
+This is a header-only library. To use it, define `RAYLIB_TMX_IMPLEMENTATION` in one *.c* source file before including *[raylib-tmx.h](include/raylib-tmx.h)*. You will also have to link its dependencies:
+
 - [raylib](https://www.raylib.com/)
 - [tmx](https://github.com/baylej/tmx)
 - [libxml2](http://xmlsoft.org)
 - [zlib](http://zlib.net/) (optional)
 
-If you're using CMake, these come packed in.
+If you're using CMake, *libxml2* and *zlib* come packed in.
 
 ### Example
 
@@ -23,11 +24,9 @@ If you're using CMake, these come packed in.
 #include "raylib-tmx.h"
 
 int main() {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
-    InitWindow(screenWidth, screenHeight, "[raylib-tmx] example");
+    InitWindow(800, 450, "[raylib-tmx] example");
 
-    tmx_map* map = LoadTMX("resources/desert.tmx");
+    tmx_map* map = LoadTMX("desert.tmx");
 
     while(!WindowShouldClose()) {
 
@@ -44,10 +43,9 @@ int main() {
     CloseWindow();
     return 0;
 }
-
 ```
 
-See the [examples directory](examples) for more demonstrations of how to use *raylib-tmx*.
+See the [example directory](example) for a demonstration of how to use *raylib-tmx*. Refer to the [libTMX documentation](http://libtmx.rtfd.io/) to see how to use the `tmx_map*` map object beyond rendering.
 
 ### API
 
@@ -73,6 +71,8 @@ make
 cd examples
 ./raylib-tmx-example
 ```
+
+## Credits
 
 This uses the [TMX C Loader](https://github.com/baylej/tmx), which is licensed under the [BSD 2-Clause "Simplified" License](https://github.com/baylej/tmx/blob/master/COPYING). Thank you to [Bayle Jonathan](https://github.com/baylej) for putting it together, and the [tmx example](https://github.com/baylej/tmx/blob/master/examples/raylib/raylib.c) this was inspired from.
 

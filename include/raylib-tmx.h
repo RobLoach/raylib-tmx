@@ -41,12 +41,12 @@ extern "C" {
 #endif
 
 // TMX functions
-tmx_map* LoadTMX(const char* fileName);
-void UnloadTMX(tmx_map* map);
-Color ColorFromTMX(uint32_t color);
-void DrawTMX(tmx_map *map, int posX, int posY, Color tint);
-void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint);
-void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);
+tmx_map* LoadTMX(const char* fileName);                             // Load a Tiled .tmx tile map
+void UnloadTMX(tmx_map* map);                                       // Unload the given Tiled map
+Color ColorFromTMX(uint32_t color);                                 // Convert a Tiled color number to a raylib Color
+void DrawTMX(tmx_map *map, int posX, int posY, Color tint);         // Render the given Tiled map to the screen
+void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render the given Tiled layer on the screen
+void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);   // Render the given tile to the screen
 
 #ifdef __cplusplus
 }
@@ -59,23 +59,44 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);
 #define RAYLIB_TMX_IMPLEMENTATION_ONCE
 
 #include "raylib.h"
-#include <tmx.h>
+#include "tmx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/**
+ * Convert the given Tiled ARGB color to a raylib Color.
+ *
+ * @param color The Tiled color number in ARGB form.
+ *
+ * @return The raylib Color representation.
+ */
 Color ColorFromTMX(uint32_t color) {
 	tmx_col_bytes res = tmx_col_to_bytes(color);
 	return *((Color*)&res);
 }
 
-void *LoadTMXImage(const char *path) {
+/**
+ * Loads the provided path as a Texture for use with TMX.
+ *
+ * @param fileName The file path of the image to load.
+ *
+ * @return A void pointer representation of the Texture.
+ *
+ * @see UnloadTMXImage()
+ *
+ * @internal
+ */
+void *LoadTMXImage(const char *fileName) {
 	Texture2D *returnValue = MemAlloc(sizeof(Texture2D));
-	*returnValue = LoadTexture(path);
+	*returnValue = LoadTexture(fileName);
 	return returnValue;
 }
 
+/**
+ * Unload the provided Texture pointer.
+ */
 void UnloadTMXImage(void *ptr) {
     if (ptr != NULL) {
         UnloadTexture(*((Texture2D *) ptr));
@@ -83,10 +104,23 @@ void UnloadTMXImage(void *ptr) {
     }
 }
 
+/**
+ * Reallocate memory function callback for TMX.
+ */
 void* MemReallocTMX(void* address, size_t len) {
     return MemRealloc(address, (int)len);
 }
 
+/**
+ * Loads given .tmx Tiled file.
+ *
+ * @param fileName The .tmx file to load.
+ *
+ * @return A TMX Tiled map object pointer.
+ *
+ * @see UnloadTMX()
+ * @todo Add LoadTMXFromMemory() to allow loading through a buffer: https://github.com/baylej/tmx/pull/58
+ */
 tmx_map* LoadTMX(const char* fileName) {
     // Register the TMX callbacks.
     tmx_alloc_func = MemReallocTMX;
@@ -114,6 +148,9 @@ tmx_map* LoadTMX(const char* fileName) {
     // return map;
 }
 
+/**
+ * Unloads the given TMX map.
+ */
 void UnloadTMX(tmx_map* map) {
     if (!map) {
         tmx_map_free(map);
@@ -223,6 +260,9 @@ void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
     }
 }
 
+/**
+ * @internal
+ */
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     Texture* image;
     Rectangle srcRect;
@@ -243,7 +283,6 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
         image = (Texture*)tile->tileset->image->resource_image;
     }
 
-    // Draw
     if (image) {
         DrawTextureRec(*image, srcRect, position, tint);
     }
@@ -267,6 +306,15 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
 	}
 }
 
+/**
+ * Render the given layer to the screen.
+ *
+ * @param map The TMX map that holds the layer.
+ * @param layer The layer to render on the screen.
+ * @param posX The X position of the screen.
+ * @param posY The Y position of the screen.
+ * @param tint How to tint the rendering of the layer.
+ */
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint) {
 	while (layer) {
 		if (layer->visible) {
@@ -289,6 +337,14 @@ void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint
 	}
 }
 
+/**
+ * Render the given map to the screen.
+ *
+ * @param map The TMX map to render to the screen.
+ * @param posX The X position of the screen.
+ * @param posY The Y position of the screen.
+ * @param tint How to tint the rendering of the layer.
+ */
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint) {
     Color background = ColorFromTMX(map->backgroundcolor);
     // TODO: Apply the tint to the background color.
