@@ -45,7 +45,8 @@ tmx_map* LoadTMX(const char* fileName);                             // Load a Ti
 void UnloadTMX(tmx_map* map);                                       // Unload the given Tiled map
 Color ColorFromTMX(uint32_t color);                                 // Convert a Tiled color number to a raylib Color
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint);         // Render the given Tiled map to the screen
-void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render the given Tiled layer on the screen
+void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint); // Render all the given map layers to the screen
+void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render a single map layer on the screen
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);   // Render the given tile to the screen
 
 #ifdef __cplusplus
@@ -96,6 +97,8 @@ void *LoadTMXImage(const char *fileName) {
 
 /**
  * Unload the provided Texture pointer.
+ *
+ * @internal
  */
 void UnloadTMXImage(void *ptr) {
     if (ptr != NULL) {
@@ -106,6 +109,8 @@ void UnloadTMXImage(void *ptr) {
 
 /**
  * Reallocate memory function callback for TMX.
+ *
+ * @internal
  */
 void* MemReallocTMX(void* address, size_t len) {
     return MemRealloc(address, (int)len);
@@ -150,6 +155,8 @@ tmx_map* LoadTMX(const char* fileName) {
 
 /**
  * Unloads the given TMX map.
+ *
+ * @param map The map to unload.
  */
 void UnloadTMX(tmx_map* map) {
     if (!map) {
@@ -162,6 +169,9 @@ void UnloadTMX(tmx_map* map) {
 #define RAYLIB_TMX_LINE_THICKNESS 3.0f
 #endif
 
+/**
+ * @internal
+ */
 void DrawTMXPolyline(double offset_x, double offset_y, double **points, int points_count, Color color) {
 	for (int i = 1; i < points_count; i++) {
 		DrawLineEx((Vector2){(float)(offset_x + points[i-1][0]), (float)(offset_y + points[i-1][1])},
@@ -170,6 +180,9 @@ void DrawTMXPolyline(double offset_x, double offset_y, double **points, int poin
 	}
 }
 
+/**
+ * @internal
+ */
 void DrawTMXPolygon(double offset_x, double offset_y, double **points, int points_count, Color color) {
 	DrawTMXPolyline(offset_x, offset_y, points, points_count, color);
 	if (points_count > 2) {
@@ -179,6 +192,9 @@ void DrawTMXPolygon(double offset_x, double offset_y, double **points, int point
 	}
 }
 
+/**
+ * @internal
+ */
 void DrawTMXText(tmx_text* text, Rectangle dest, Color tint) {
     float fontSize = (float)text->pixelsize;
     const char* message = text->text;
@@ -208,6 +224,9 @@ void DrawTMXText(tmx_text* text, Rectangle dest, Color tint) {
     }
 }
 
+/**
+ * @internal
+ */
 void DrawTMXLayerObjects(tmx_object_group *objgr, int posX, int posY, Color tint) {
 	tmx_object *head = objgr->head;
 	Color color = ColorFromTMX(objgr->color);
@@ -253,6 +272,9 @@ void DrawTMXLayerObjects(tmx_object_group *objgr, int posX, int posY, Color tint
 	}
 }
 
+/**
+ * @internal
+ */
 void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
     if (image->resource_image) {
         Texture2D *texture = (Texture2D*)image->resource_image;
@@ -261,7 +283,12 @@ void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
 }
 
 /**
- * @internal
+ * Render a single TMX tile on the screen.
+ *
+ * @param tile Which tile to render on the screen.
+ * @param posX The X position of the tile.
+ * @param posY The Y position of the tile.
+ * @param tint How to tint the tile when rendering.
  */
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     Texture* image;
@@ -288,19 +315,22 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     }
 }
 
+/**
+ * @internal
+ */
 void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint) {
 	unsigned int gid, baseGid; //, flags;
 	tmx_tileset *ts;
     Color newTint = ColorAlpha(tint, (float)layer->opacity);
-	for (int i = 0; i < map->height; i++) {
-		for (int j = 0; j < map->width; j++) {
-            baseGid = layer->content.gids[(i*map->width)+j];
+	for (int y = 0; y < map->height; y++) {
+		for (int x = 0; x < map->width; x++) {
+            baseGid = layer->content.gids[(y * map->width) + x];
 			gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
             // TODO: Add the flags of the tile to Draw.
             // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
 			if (map->tiles[gid] != NULL) {
 				ts = map->tiles[gid]->tileset;
-                DrawTMXTile(map->tiles[gid], j * ts->tile_width + posX, i * ts->tile_height + posY, newTint);
+                DrawTMXTile(map->tiles[gid], posX + x * ts->tile_width, posY + y * ts->tile_height, newTint);
             }
 		}
 	}
@@ -316,24 +346,40 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
  * @param tint How to tint the rendering of the layer.
  */
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint) {
-	while (layer) {
-		if (layer->visible) {
-            switch (layer->type) {
-                case L_GROUP:
-                    DrawTMXLayer(map, layer->content.group_head, layer->offsetx + posX, layer->offsety + posY, tint); // recursive call
-                    break;
-                case L_OBJGR:
-                    DrawTMXLayerObjects(layer->content.objgr, layer->offsetx + posX, layer->offsety + posY, tint);
-                    break;
-                case L_IMAGE:
-                    DrawTMXLayerImage(layer->content.image, layer->offsetx + posX, layer->offsety + posY, tint);
-                    break;
-                case L_LAYER:
-                    DrawTMXLayerTiles(map, layer, layer->offsetx + posX, layer->offsety + posY, tint);
-                    break;
-            }
+    switch (layer->type) {
+        case L_GROUP:
+            DrawTMXLayers(map, layer->content.group_head, posX + layer->offsetx, posY + layer->offsety, tint); // recursive call
+            break;
+        case L_OBJGR:
+            DrawTMXLayerObjects(layer->content.objgr, posX + layer->offsetx, posY + layer->offsety, tint);
+            break;
+        case L_IMAGE:
+            DrawTMXLayerImage(layer->content.image, posX + layer->offsetx, posY + layer->offsety, tint);
+            break;
+        case L_LAYER:
+            DrawTMXLayerTiles(map, layer, posX + layer->offsetx, posY + layer->offsety, tint);
+            break;
+        case L_NONE:
+            // Nothing.
+            break;
+    }
+}
+
+/**
+ * Draws all of the given TMX map layers to the screen.
+ *
+ * @param map The TMX map that holds the layer.
+ * @param layers The layer to render on the screen.
+ * @param posX The X position of the screen.
+ * @param posY The Y position of the screen.
+ * @param tint How to tint the rendering of the layer.
+ */
+void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint) {
+	while (layers) {
+		if (layers->visible) {
+            DrawTMXLayer(map, layers, posX, posY, tint);
 		}
-		layer = layer->next;
+		layers = layers->next;
 	}
 }
 
@@ -349,7 +395,7 @@ void DrawTMX(tmx_map *map, int posX, int posY, Color tint) {
     Color background = ColorFromTMX(map->backgroundcolor);
     // TODO: Apply the tint to the background color.
     DrawRectangle(posX, posY, map->width, map->height, background);
-	DrawTMXLayer(map, map->ly_head, posX, posY, tint);
+	DrawTMXLayers(map, map->ly_head, posX, posY, tint);
 }
 
 #ifdef __cplusplus
