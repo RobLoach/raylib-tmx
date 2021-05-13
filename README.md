@@ -34,7 +34,7 @@ int main() {
         BeginDrawing();
         {
             ClearBackground(RAYWHITE);
-            DrawTMX(map, position.x, position.y, WHITE);
+            DrawTMX(map, 0, 0, WHITE);
         }
         EndDrawing();
     }
@@ -54,8 +54,10 @@ See the [examples directory](examples) for more demonstrations of how to use *ra
 ``` c
 tmx_map* LoadTMX(const char* fileName);
 void UnloadTMX(tmx_map* map);
-Color ColorFromTMX(int color);
+Color ColorFromTMX(uint32_t color);
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint);
+void DrawTMXLayer(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint);
+void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);
 ```
 
 ## Development
@@ -76,4 +78,4 @@ This uses the [TMX C Loader](https://github.com/baylej/tmx), which is licensed u
 
 ## License
 
-*raylib-aseprite* is licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software. Check [LICENSE](LICENSE) for further details.
+*raylib-tmx* is licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software. Check [LICENSE](LICENSE) for further details.

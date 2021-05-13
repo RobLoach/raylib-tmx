@@ -1,6 +1,6 @@
 /**********************************************************************************************
 *
-*   raylib-tmx - Tiled TMX Loader for raylib.
+*   raylib-tmx - Tiled TMX Loader for tile maps in raylib.
 *
 *   Copyright 2021 Rob Loach (@RobLoach)
 *
@@ -45,6 +45,8 @@ tmx_map* LoadTMX(const char* fileName);
 void UnloadTMX(tmx_map* map);
 Color ColorFromTMX(uint32_t color);
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint);
+void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint);
+void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);
 
 #ifdef __cplusplus
 }
@@ -75,8 +77,10 @@ void *LoadTMXImage(const char *path) {
 }
 
 void UnloadTMXImage(void *ptr) {
-    UnloadTexture(*((Texture2D *) ptr));
-    MemFree(ptr);
+    if (ptr != NULL) {
+        UnloadTexture(*((Texture2D *) ptr));
+        MemFree(ptr);
+    }
 }
 
 void* MemReallocTMX(void* address, size_t len) {
@@ -99,7 +103,7 @@ tmx_map* LoadTMX(const char* fileName) {
     TraceLog(LOG_INFO, "TMX: Loaded %ix%i map", map->width, map->height);
     return map;
 
-    // TODO: Use https://github.com/baylej/tmx/pull/58
+    // TODO: Load using a buffer instead: https://github.com/baylej/tmx/pull/58
     // const char* fileText = LoadFileText(fileName);
     // tmx_map* map = tmx_load_buffer_path(fileText, TextLength(fileText), fileName);
     // if (!map) {
@@ -122,8 +126,7 @@ void UnloadTMX(tmx_map* map) {
 #endif
 
 void DrawTMXPolyline(double offset_x, double offset_y, double **points, int points_count, Color color) {
-	int i;
-	for (i=1; i<points_count; i++) {
+	for (int i = 1; i < points_count; i++) {
 		DrawLineEx((Vector2){(float)(offset_x + points[i-1][0]), (float)(offset_y + points[i-1][1])},
 		           (Vector2){(float)(offset_x + points[i][0]), (float)(offset_y + points[i][1])},
 		           RAYLIB_TMX_LINE_THICKNESS, color);
@@ -192,7 +195,7 @@ void DrawTMXLayerObjects(tmx_object_group *objgr, int posX, int posY, Color tint
                     DrawTMXPolyline(dest.x, dest.y, head->content.shape->points, head->content.shape->points_len, color);
                     break;
                 case OT_ELLIPSE:
-                    DrawEllipseLines(dest.x + head->width / 2.0f, dest.y + head->height / 2.0f, head->width / 2.0f, head->height / 2.0f, color);
+                    DrawEllipseLines(dest.x + head->width / 2.0, dest.y + head->height / 2.0, head->width / 2.0f, head->height / 2.0f, color);
                     break;
                 case OT_TILE:
                     // TODO: Draw an individual tile.
@@ -200,11 +203,12 @@ void DrawTMXLayerObjects(tmx_object_group *objgr, int posX, int posY, Color tint
                 case OT_TEXT: {
                     tmx_text* text = head->content.text;
                     Color textColor = ColorFromTMX(text->color);
+                    // TODO: Fix application of the tint.
                     textColor.a = tint.a;
                     DrawTMXText(text, dest, textColor);
                 } break;
                 case OT_POINT:
-                    DrawCircle(dest.x + head->width / 2.0f, dest.y + head->height / 2.0f, 5, color);
+                    DrawCircle(dest.x + head->width / 2.0, dest.y + head->height / 2.0, 5, color);
                     break;
             }
 		}
@@ -213,95 +217,75 @@ void DrawTMXLayerObjects(tmx_object_group *objgr, int posX, int posY, Color tint
 }
 
 void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
-	Texture2D *texture = (Texture2D*)image->resource_image;
-	DrawTexture(*texture, posX, posY, tint);
+    if (image->resource_image) {
+        Texture2D *texture = (Texture2D*)image->resource_image;
+        DrawTexture(*texture, posX, posY, tint);
+    }
 }
 
-void DrawTMXTileV(tmx_tileset* ts, tmx_tile* tile, Vector2 destination, Color tint) {
+void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     Texture* image;
     Rectangle srcRect;
-    tmx_image *im = tile->image;
+    Vector2 position;
+    position.x = (float)posX;
+    position.y = (float)posY;
     srcRect.x  = tile->ul_x;
     srcRect.y  = tile->ul_y;
     srcRect.width  = tile->tileset->tile_width;
     srcRect.height = tile->tileset->tile_height;
-    if (im) {
+
+    // Find the image
+    tmx_image *im = tile->image;
+    if (im && im->resource_image) {
         image = (Texture*)im->resource_image;
     }
-    else {
+    else if (tile->tileset->image->resource_image) {
         image = (Texture*)tile->tileset->image->resource_image;
     }
 
-    //flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
-
     // Draw
-    DrawTextureRec(*image, srcRect, destination, tint);
+    if (image) {
+        DrawTextureRec(*image, srcRect, position, tint);
+    }
 }
 
 void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint) {
-	long i, j;
 	unsigned int gid, baseGid; //, flags;
-    Rectangle srcRect;
-	float opacity;
-    Vector2 destination;
 	tmx_tileset *ts;
-	tmx_image *im;
-	Texture2D* image;
-	opacity = (float)layer->opacity;
-    Color newTint = ColorAlpha(tint, opacity);
-	for (i=0; i<map->height; i++) {
-		for (j=0; j<map->width; j++) {
+    Color newTint = ColorAlpha(tint, (float)layer->opacity);
+	for (int i = 0; i < map->height; i++) {
+		for (int j = 0; j < map->width; j++) {
             baseGid = layer->content.gids[(i*map->width)+j];
 			gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
+            // TODO: Add the flags of the tile to Draw.
+            // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
 			if (map->tiles[gid] != NULL) {
-                // destination.x = (float)(j * ts->tile_width + posX);
-                // destination.y = (float)(i * ts->tile_height + posY);
-                // DrawTMXTileV(ts, map->tiles[gid], destination, newTint);
-                // continue;
-
 				ts = map->tiles[gid]->tileset;
-				im = map->tiles[gid]->image;
-				srcRect.x  = map->tiles[gid]->ul_x;
-				srcRect.y  = map->tiles[gid]->ul_y;
-				srcRect.width  = ts->tile_width;
-				srcRect.height = ts->tile_height;
-				if (im) {
-                    image = (Texture*)im->resource_image;
-				}
-				else {
-                    image = (Texture*)ts->image->resource_image;
-				}
-
-				//flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
-
-                // Draw
-                destination.x = (float)(j * ts->tile_width + posX);
-                destination.y = (float)(i * ts->tile_height + posY);
-                DrawTextureRec(*image, srcRect, destination, newTint);
-			}
+                DrawTMXTile(map->tiles[gid], j * ts->tile_width + posX, i * ts->tile_height + posY, newTint);
+            }
 		}
 	}
 }
 
-void DrawTMXLayer(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint) {
-	while (layers) {
-		if (layers->visible) {
-            switch (layers->type) {
+void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint) {
+	while (layer) {
+		if (layer->visible) {
+            switch (layer->type) {
                 case L_GROUP:
-                    DrawTMXLayer(map, layers->content.group_head, layers->offsetx + posX, layers->offsety + posY, tint); // recursive call
+                    DrawTMXLayer(map, layer->content.group_head, layer->offsetx + posX, layer->offsety + posY, tint); // recursive call
                     break;
                 case L_OBJGR:
-                    DrawTMXLayerObjects(layers->content.objgr, layers->offsetx + posX, layers->offsety + posY, tint);
+                    DrawTMXLayerObjects(layer->content.objgr, layer->offsetx + posX, layer->offsety + posY, tint);
                     break;
                 case L_IMAGE:
-                    DrawTMXLayerImage(layers->content.image, layers->offsetx + posX, layers->offsety + posY, tint);
+                    DrawTMXLayerImage(layer->content.image, layer->offsetx + posX, layer->offsety + posY, tint);
                     break;
                 case L_LAYER:
-                    DrawTMXLayerTiles(map, layers, layers->offsetx + posX, layers->offsety + posY, tint);
+                    DrawTMXLayerTiles(map, layer, layer->offsetx + posX, layer->offsety + posY, tint);
                     break;
             }
 		}
-		layers = layers->next;
+		layer = layer->next;
 	}
 }
 
