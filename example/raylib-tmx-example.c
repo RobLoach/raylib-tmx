@@ -52,6 +52,7 @@ int main() {
         {
             ClearBackground(RAYWHITE);
             DrawTMX(map, position.x, position.y, WHITE);
+            DrawFPS(10, 10);
         }
         EndDrawing();
         //----------------------------------------------------------------------------------

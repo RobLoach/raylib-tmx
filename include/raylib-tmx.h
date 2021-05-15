@@ -227,7 +227,7 @@ void DrawTMXText(tmx_text* text, Rectangle dest, Color tint) {
 /**
  * @internal
  */
-void DrawTMXLayerObjects(tmx_object_group *objgr, int posX, int posY, Color tint) {
+void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int posY, Color tint) {
 	tmx_object *head = objgr->head;
 	Color color = ColorFromTMX(objgr->color);
     // TODO: Merge the tint
@@ -253,9 +253,12 @@ void DrawTMXLayerObjects(tmx_object_group *objgr, int posX, int posY, Color tint
                 case OT_ELLIPSE:
                     DrawEllipseLines(dest.x + head->width / 2.0, dest.y + head->height / 2.0, head->width / 2.0f, head->height / 2.0f, color);
                     break;
-                case OT_TILE:
-                    // TODO: Draw an individual tile.
-                    break;
+                case OT_TILE: {
+                    int gid = head->content.gid;
+                    if (map->tiles[gid] != NULL) {
+                        DrawTMXTile(map->tiles[gid], dest.x, dest.y - dest.height, tint);
+                    }
+                } break;
                 case OT_TEXT: {
                     tmx_text* text = head->content.text;
                     Color textColor = ColorFromTMX(text->color);
@@ -400,7 +403,7 @@ void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint
             DrawTMXLayers(map, layer->content.group_head, posX + layer->offsetx, posY + layer->offsety, tint); // recursive call
             break;
         case L_OBJGR:
-            DrawTMXLayerObjects(layer->content.objgr, posX + layer->offsetx, posY + layer->offsety, tint);
+            DrawTMXLayerObjects(map, layer->content.objgr, posX + layer->offsetx, posY + layer->offsety, tint);
             break;
         case L_IMAGE:
             DrawTMXLayerImage(layer->content.image, posX + layer->offsetx, posY + layer->offsety, tint);
