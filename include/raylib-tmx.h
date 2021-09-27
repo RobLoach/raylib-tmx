@@ -299,6 +299,12 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     Vector2 position;
     position.x = (float)posX;
     position.y = (float)posY;
+
+    if(tile->animation) {
+        int tile_id = tile->animation[tile->current_animation_frame].tile_id;
+        tile = &tile->tileset->tiles[tile_id];
+    }
+
     srcRect.x  = tile->ul_x;
     srcRect.y  = tile->ul_y;
     srcRect.width  = tile->tileset->tile_width;
@@ -306,13 +312,14 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
 
     // Find the image
     tmx_image *im = tile->image;
+    
     if (im && im->resource_image) {
         image = (Texture*)im->resource_image;
     }
     else if (tile->tileset->image->resource_image) {
         image = (Texture*)tile->tileset->image->resource_image;
     }
-
+    
     if (image) {
         DrawTextureRec(*image, srcRect, position, tint);
     }
