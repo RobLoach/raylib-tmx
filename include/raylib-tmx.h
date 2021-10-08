@@ -220,7 +220,7 @@ void DrawTMXText(tmx_text* text, Rectangle dest, Color tint) {
         DrawTextEx(font, message, position, fontSize, spacing, tint);
     }
     else {
-        DrawTextRec(font, message, dest, fontSize, spacing, true, tint);
+//        DrawTextRec(font, message, dest, fontSize, spacing, true, tint);
     }
 }
 
