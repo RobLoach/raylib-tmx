@@ -201,10 +201,10 @@ void DrawTMXText(tmx_text* text, Rectangle dest, Color tint) {
     Font font = GetFontDefault();
     // TODO: Figure out the correct spacing.
     float spacing = (float)text->kerning * fontSize / 12.0f;
+    Vector2 position = {dest.x, dest.y};
 
     if (text->wrap == 0) {
         Vector2 textSize = MeasureTextEx(font, message, fontSize, spacing);
-        Vector2 position = {dest.x, dest.y};
         if (text->halign == HA_CENTER) {
             position.x = dest.x + dest.width / 2.0f - textSize.x / 2.0f;
         }
@@ -220,7 +220,8 @@ void DrawTMXText(tmx_text* text, Rectangle dest, Color tint) {
         DrawTextEx(font, message, position, fontSize, spacing, tint);
     }
     else {
-//        DrawTextRec(font, message, dest, fontSize, spacing, true, tint);
+        Vector2 origin = {0.0f, 0.0f};
+        DrawTextPro(font, message, position, origin, 0.0f, fontSize, spacing, tint);
     }
 }
 
@@ -300,10 +301,13 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     position.x = (float)posX;
     position.y = (float)posY;
 
+#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
+    // TODO: Process the animation https://github.com/baylej/tmx/pull/64
     if(tile->animation) {
         int tile_id = tile->animation[tile->current_animation_frame].tile_id;
         tile = &tile->tileset->tiles[tile_id];
     }
+#endif
 
     srcRect.x  = tile->ul_x;
     srcRect.y  = tile->ul_y;
@@ -312,14 +316,14 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
 
     // Find the image
     tmx_image *im = tile->image;
-    
+
     if (im && im->resource_image) {
         image = (Texture*)im->resource_image;
     }
     else if (tile->tileset->image->resource_image) {
         image = (Texture*)tile->tileset->image->resource_image;
     }
-    
+
     if (image) {
         DrawTextureRec(*image, srcRect, position, tint);
     }
