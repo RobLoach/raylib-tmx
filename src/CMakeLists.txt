@@ -1,15 +1,37 @@
 # raylib
 find_package(raylib QUIET)
 if (NOT raylib_FOUND)
-    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(BUILD_GAMES    OFF CACHE BOOL "" FORCE)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../vendor/raylib ${CMAKE_CURRENT_SOURCE_DIR}/../vendor/raylib)
+    include(FetchContent)
+        FetchContent_Declare(
+        raylib
+        GIT_REPOSITORY https://github.com/raysan5/raylib.git
+        GIT_TAG 4.2.0
+    )
+    FetchContent_GetProperties(raylib)
+    if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
+        set(FETCHCONTENT_QUIET NO)
+        FetchContent_Populate(raylib)
+        set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+        set(BUILD_GAMES    OFF CACHE BOOL "" FORCE)
+        add_subdirectory(${raylib_SOURCE_DIR} ${raylib_BINARY_DIR})
+    endif()
 endif()
 
 # tmx
 find_package(tmx QUIET)
 if (NOT tmx_FOUND)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../vendor/tmx ${CMAKE_CURRENT_SOURCE_DIR}/../vendor/tmx)
+    include(FetchContent)
+        FetchContent_Declare(
+        tmx
+        GIT_REPOSITORY https://github.com/RobLoach/tmx.git
+        GIT_TAG d373be5f5f8041fbd192b26e7440ece848a3e059
+    )
+    FetchContent_GetProperties(tmx)
+    if (NOT tmx_POPULATED)
+        set(FETCHCONTENT_QUIET NO)
+        FetchContent_Populate(tmx)
+        add_subdirectory(${tmx_SOURCE_DIR} ${tmx_BINARY_DIR})
+    endif()
 endif()
 
 option(RAYLIB_TMX "raylib-tmx" ON)

@@ -9,7 +9,7 @@ Load [Tiled](https://www.mapeditor.org) `.tmx` files for tile maps in [raylib](h
 This is a header-only library. To use it, define `RAYLIB_TMX_IMPLEMENTATION` in one *.c* source file before including *[raylib-tmx.h](include/raylib-tmx.h)*. You will also have to link its dependencies:
 
 - [raylib](https://www.raylib.com/)
-- [tmx](https://github.com/baylej/tmx)
+- [tmx](https://github.com/baylej/tmx) - With [tmx_load_buffer_path()](https://github.com/baylej/tmx/pull/58)
 - [libxml2](http://xmlsoft.org)
 - [zlib](http://zlib.net/) (optional)
 

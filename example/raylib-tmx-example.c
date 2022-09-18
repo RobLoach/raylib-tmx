@@ -16,9 +16,12 @@
 #define RAYLIB_TMX_IMPLEMENTATION
 #include "raylib-tmx.h"
 
-int main() {
+int main(int argc, char *argv[]) {
     // Initialization
     //--------------------------------------------------------------------------------------
+    // Make sure we're running in the correct directory.
+    ChangeDirectory(GetDirectoryPath(argv[0]));
+
     const int screenWidth = 800;
     const int screenHeight = 450;
     InitWindow(screenWidth, screenHeight, "[raylib-tmx] example");

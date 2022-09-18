@@ -59,9 +59,6 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);   // Render th
 #ifndef RAYLIB_TMX_IMPLEMENTATION_ONCE
 #define RAYLIB_TMX_IMPLEMENTATION_ONCE
 
-#include "raylib.h"
-#include "tmx.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
