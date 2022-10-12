@@ -72,6 +72,13 @@ cd examples
 ./raylib-tmx-example
 ```
 
+## Alternatives
+
+This is not the only attempt to get Tiled working in raylib...
+
+- [raylib-tileson](https://github.com/robloach/raylib-tileson)
+- [raylib-tiled](https://github.com/RobLoach/raylib-tiled)
+
 ## Credits
 
 This uses the [TMX C Loader](https://github.com/baylej/tmx), which is licensed under the [BSD 2-Clause "Simplified" License](https://github.com/baylej/tmx/blob/master/COPYING). Thank you to [Bayle Jonathan](https://github.com/baylej) for putting it together, and the [tmx example](https://github.com/baylej/tmx/blob/master/examples/raylib/raylib.c) this was inspired from.
