@@ -38,6 +38,9 @@ option(RAYLIB_TMX "raylib-tmx" ON)
 option(RAYLIB_TMX_SHARED "raylib-tmx-shared" OFF)
 
 set(RAYLIB_TMX_DEPS raylib tmx)
+if(UNIX)
+    list(APPEND RAYLIB_TMX_DEPS m)
+endif()
 
 if(RAYLIB_TMX)
     add_library(raylib-tmx STATIC raylib-tmx.c)

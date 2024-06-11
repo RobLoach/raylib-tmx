@@ -308,8 +308,8 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
 
     srcRect.x  = tile->ul_x;
     srcRect.y  = tile->ul_y;
-    srcRect.width  = tile->tileset->tile_width;
-    srcRect.height = tile->tileset->tile_height;
+    srcRect.width  = tile->width;
+    srcRect.height = tile->height;
 
     // Find the image
     tmx_image *im = tile->image;
