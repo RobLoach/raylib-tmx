@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     InitWindow(screenWidth, screenHeight, "[raylib-tmx] example");
     SetTargetFPS(60);
 
-    tmx_map* map = LoadTMX(argv[1]);
+    tmx_map* map = LoadTMX(argc > 1 ? argv[1] : "resources/desert.tmx");
     Vector2 position = {0, 0};
     //--------------------------------------------------------------------------------------
 
