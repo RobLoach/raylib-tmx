@@ -5,7 +5,7 @@ if (NOT raylib_FOUND)
         FetchContent_Declare(
         raylib
         GIT_REPOSITORY https://github.com/raysan5/raylib.git
-        GIT_TAG 4.2.0
+        GIT_TAG 5.0
     )
     FetchContent_GetProperties(raylib)
     if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
@@ -24,7 +24,7 @@ if (NOT tmx_FOUND)
         FetchContent_Declare(
         tmx
         GIT_REPOSITORY https://github.com/RobLoach/tmx.git
-        GIT_TAG d373be5f5f8041fbd192b26e7440ece848a3e059
+        GIT_TAG f88a433
     )
     FetchContent_GetProperties(tmx)
     if (NOT tmx_POPULATED)
