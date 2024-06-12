@@ -156,7 +156,7 @@ tmx_map* LoadTMX(const char* fileName) {
  * @param map The map to unload.
  */
 void UnloadTMX(tmx_map* map) {
-    if (!map) {
+    if (map) {
         tmx_map_free(map);
         TraceLog(LOG_INFO, "TMX: Unloaded map");
     }
