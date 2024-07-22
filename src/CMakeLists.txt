@@ -1,3 +1,21 @@
+function(export_library lib_name)
+    install(TARGETS ${lib_name}
+            EXPORT "${lib_name}Config"
+            ARCHIVE DESTINATION lib
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin
+    )
+    install(DIRECTORY ../include/ DESTINATION include)
+
+    export(EXPORT "${lib_name}Config"
+            FILE "${CMAKE_CURRENT_BINARY_DIR}/${lib_name}Config.cmake"
+    )
+    install(EXPORT "${lib_name}Config"
+            FILE "${lib_name}Config.cmake"
+            DESTINATION lib/cmake/${lib_name}
+    )
+endfunction()
+
 # raylib
 find_package(raylib QUIET)
 if (NOT raylib_FOUND)
@@ -44,12 +62,20 @@ endif()
 
 if(RAYLIB_TMX)
     add_library(raylib-tmx STATIC raylib-tmx.c)
-    target_include_directories(raylib-tmx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_include_directories(raylib-tmx PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+        $<INSTALL_INTERFACE:include>
+    )
     target_link_libraries(raylib-tmx PUBLIC ${RAYLIB_TMX_DEPS})
+    export_library("raylib-tmx")
 endif()
 
 if(RAYLIB_TMX_SHARED)
     add_library(raylib-tmx-shared SHARED raylib-tmx.c)
-    target_include_directories(raylib-tmx-shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_include_directories(raylib-tmx-shared PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+        $<INSTALL_INTERFACE:include>
+    )
     target_link_libraries(raylib-tmx-shared PUBLIC ${RAYLIB_TMX_DEPS})
+    export_library("raylib-tmx-shared")
 endif()
