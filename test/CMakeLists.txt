@@ -13,8 +13,8 @@ target_link_libraries(raylib-tmx-test PUBLIC
 
 # Copy the resources
 if(MSVC)
-    add_custom_command(TARGET raylib-tmx-example POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources" "$<TARGET_FILE_DIR:raylib-tmx-example>/resources"
+    add_custom_command(TARGET raylib-tmx-test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources" "$<TARGET_FILE_DIR:raylib-tmx-test>/resources"
     )
 else()
     file(GLOB resources resources/*)
