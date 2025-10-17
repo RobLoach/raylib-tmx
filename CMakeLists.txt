@@ -7,7 +7,6 @@ project(raylib-tmx
 )
 
 # Include Directory
-add_subdirectory(include)
 add_subdirectory(src)
 
 # Examples
