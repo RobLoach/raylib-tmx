@@ -110,7 +110,7 @@ void UnloadTMXImage(void *ptr) {
  * @internal
  */
 void* MemReallocTMX(void* address, size_t len) {
-    return MemRealloc(address, (int)len);
+    return MemRealloc(address, (unsigned int)len);
 }
 
 /**
@@ -249,12 +249,16 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
                     DrawTMXPolyline(dest.x, dest.y, head->content.shape->points, head->content.shape->points_len, color);
                     break;
                 case OT_ELLIPSE:
-                    DrawEllipseLines(dest.x + head->width / 2.0, dest.y + head->height / 2.0, head->width / 2.0f, head->height / 2.0f, color);
+                    DrawEllipseLines((int)(dest.x + head->width  / 2.0),
+		                     (int)(dest.y + head->height / 2.0),
+		                     (float)head->width / 2.0f,
+		                     (float)head->height / 2.0f,
+		                     color);
                     break;
                 case OT_TILE: {
                     int gid = head->content.gid;
                     if (map->tiles[gid] != NULL) {
-                        DrawTMXTile(map->tiles[gid], dest.x, dest.y - dest.height, tint);
+                        DrawTMXTile(map->tiles[gid], (int)dest.x, (int)(dest.y - dest.height), tint);
                     }
                 } break;
                 case OT_TEXT: {
@@ -265,8 +269,12 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
                     DrawTMXText(text, dest, textColor);
                 } break;
                 case OT_POINT:
-                    DrawCircle(dest.x + head->width / 2.0, dest.y + head->height / 2.0, 5, color);
+                    DrawCircle((int)(dest.x + head->width  / 2.0),
+		               (int)(dest.y + head->height / 2.0),
+		               5.0f, color);
                     break;
+		case OT_NONE:
+		    break;
             }
 		}
 		head = head->next;
@@ -292,7 +300,7 @@ void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
  * @param tint How to tint the tile when rendering.
  */
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
-    Texture* image;
+    Texture* image = NULL;
     Rectangle srcRect;
     Vector2 position;
     position.x = (float)posX;
@@ -306,10 +314,10 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     }
 #endif
 
-    srcRect.x  = tile->ul_x;
-    srcRect.y  = tile->ul_y;
-    srcRect.width  = tile->tileset->tile_width;
-    srcRect.height = tile->tileset->tile_height;
+    srcRect.x      = (float)tile->ul_x;
+    srcRect.y      = (float)tile->ul_y;
+    srcRect.width  = (float)tile->tileset->tile_width;
+    srcRect.height = (float)tile->tileset->tile_height;
 
     // Find the image
     tmx_image *im = tile->image;
@@ -337,57 +345,69 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
     switch (map->renderorder) {
         case R_NONE:
         case R_RIGHTDOWN:
-            for (int y = 0; y < map->height; y++) {
-                for (int x = 0; x < map->width; x++) {
+            for (unsigned int y = 0; y < map->height; y++) {
+                for (unsigned int x = 0; x < map->width; x++) {
                     baseGid = layer->content.gids[(y * map->width) + x];
                     gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
                     // TODO: Add the flags of the tile to Draw.
                     // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                     if (map->tiles[gid] != NULL) {
                         ts = map->tiles[gid]->tileset;
-                        DrawTMXTile(map->tiles[gid], posX + x * ts->tile_width, posY + y * ts->tile_height, newTint);
+                        DrawTMXTile(map->tiles[gid],
+			           (int)((unsigned int)posX + x * ts->tile_width),
+				   (int)((unsigned int)posY + y * ts->tile_height),
+			           newTint);
                     }
                 }
             }
         break;
         case R_RIGHTUP:
-            for (int y = map->height - 1; y >= 0; y--) {
-                for (int x = 0; x < map->width; x++) {
+            for (unsigned int y = map->height - 1; y >= 0; y--) {
+                for (unsigned int x = 0; x < map->width; x++) {
                     baseGid = layer->content.gids[(y * map->width) + x];
                     gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
                     // TODO: Add the flags of the tile to Draw.
                     // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                     if (map->tiles[gid] != NULL) {
                         ts = map->tiles[gid]->tileset;
-                        DrawTMXTile(map->tiles[gid], posX + x * ts->tile_width, posY + y * ts->tile_height, newTint);
+			DrawTMXTile(map->tiles[gid],
+			           (int)((unsigned int)posX + x * ts->tile_width),
+				   (int)((unsigned int)posY + y * ts->tile_height),
+			           newTint);
                     }
                 }
             }
         break;
         case R_LEFTDOWN:
-            for (int y = 0; y < map->height; y++) {
-                for (int x = map->width - 1; x >= 0; x--) {
+            for (unsigned int y = 0; y < map->height; y++) {
+                for (unsigned int x = map->width - 1; x >= 0; x--) {
                     baseGid = layer->content.gids[(y * map->width) + x];
                     gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
                     // TODO: Add the flags of the tile to Draw.
                     // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                     if (map->tiles[gid] != NULL) {
                         ts = map->tiles[gid]->tileset;
-                        DrawTMXTile(map->tiles[gid], posX + x * ts->tile_width, posY + y * ts->tile_height, newTint);
+			DrawTMXTile(map->tiles[gid],
+			           (int)((unsigned int)posX + x * ts->tile_width),
+				   (int)((unsigned int)posY + y * ts->tile_height),
+			           newTint);
                     }
                 }
             }
         break;
         case R_LEFTUP:
-            for (int y = map->height - 1; y >= 0; y--) {
-                for (int x = map->width - 1; x >= 0; x--) {
+            for (unsigned int y = map->height - 1; y >= 0; y--) {
+                for (unsigned int x = map->width - 1; x >= 0; x--) {
                     baseGid = layer->content.gids[(y * map->width) + x];
                     gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
                     // TODO: Add the flags of the tile to Draw.
                     // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                     if (map->tiles[gid] != NULL) {
                         ts = map->tiles[gid]->tileset;
-                        DrawTMXTile(map->tiles[gid], posX + x * ts->tile_width, posY + y * ts->tile_height, newTint);
+			DrawTMXTile(map->tiles[gid],
+			           (int)((unsigned int)posX + x * ts->tile_width),
+				   (int)((unsigned int)posY + y * ts->tile_height),
+			           newTint);
                     }
                 }
             }
@@ -454,7 +474,7 @@ void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color ti
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint) {
     Color background = ColorFromTMX(map->backgroundcolor);
     // TODO: Apply the tint to the background color.
-    DrawRectangle(posX, posY, map->width, map->height, background);
+    DrawRectangle(posX, posY, (int)map->width, (int)map->height, background);
 	DrawTMXLayers(map, map->ly_head, posX, posY, tint);
 }
 
