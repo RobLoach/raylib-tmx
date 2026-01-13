@@ -257,15 +257,13 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
 		                     (float)head->height / 2.0f,
 		                     color);
                     break;
-		}
 		case OT_TILE: {
 		    int baseGid = head->content.gid;
                     int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
 		    if (map->tiles[gid] != NULL) {
                         DrawTMXTile(map->tiles[gid], (int)dest.x, (int)(dest.y - dest.height), tint, baseGid);
 		    }
-		    break;
-                }
+		} break;
                 case OT_TEXT: {
                     tmx_text* text = head->content.text;
                     Color textColor = ColorFromTMX(text->color);
@@ -330,6 +328,8 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint, int baseGid) {
 	if (is_horizontally_flipped != 0) srcRect.width = -fabs(srcRect.width);
 	int is_vertically_flipped   = baseGid & TMX_FLIPPED_VERTICALLY;
 	if (is_vertically_flipped   != 0) srcRect.height = -fabs(srcRect.height);
+	// TODO: Handle diagonal flip
+	// int is_diagonally_flipped   = gid & TMX_FLIPPED_DIAGONALLY;
     }
 
     // Find the image
@@ -362,8 +362,6 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
                 for (unsigned int x = 0; x < map->width; x++) {
                     baseGid = layer->content.gids[(y * map->width) + x];
                     gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
-                    // TODO: Add the flags of the tile to Draw.
-                    // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                     if (map->tiles[gid] != NULL) {
                         ts = map->tiles[gid]->tileset;
                         DrawTMXTile(map->tiles[gid],
@@ -379,8 +377,6 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
                 for (unsigned int x = 0; x < map->width; x++) {
                     baseGid = layer->content.gids[(y * map->width) + x];
                     gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
-                    // TODO: Add the flags of the tile to Draw.
-                    // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                     if (map->tiles[gid] != NULL) {
                         ts = map->tiles[gid]->tileset;
 			DrawTMXTile(map->tiles[gid],
@@ -396,8 +392,6 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
                 for (unsigned int x = map->width - 1; x >= 0; x--) {
                     baseGid = layer->content.gids[(y * map->width) + x];
                     gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
-                    // TODO: Add the flags of the tile to Draw.
-                    // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                     if (map->tiles[gid] != NULL) {
                         ts = map->tiles[gid]->tileset;
 			DrawTMXTile(map->tiles[gid],
@@ -413,8 +407,6 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
                 for (unsigned int x = map->width - 1; x >= 0; x--) {
                     baseGid = layer->content.gids[(y * map->width) + x];
                     gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
-                    // TODO: Add the flags of the tile to Draw.
-                    // flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                     if (map->tiles[gid] != NULL) {
                         ts = map->tiles[gid]->tileset;
 			DrawTMXTile(map->tiles[gid],
