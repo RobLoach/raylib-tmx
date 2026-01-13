@@ -47,7 +47,7 @@ Color ColorFromTMX(uint32_t color);                                 // Convert a
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint);         // Render the given Tiled map to the screen
 void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint); // Render all the given map layers to the screen
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render a single map layer on the screen
-void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);   // Render the given tile to the screen
+void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint, int baseGid);   // Render the given tile to the screen
 
 #ifdef __cplusplus
 }
@@ -255,12 +255,15 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
 		                     (float)head->height / 2.0f,
 		                     color);
                     break;
-                case OT_TILE: {
-                    int gid = head->content.gid;
-                    if (map->tiles[gid] != NULL) {
-                        DrawTMXTile(map->tiles[gid], (int)dest.x, (int)(dest.y - dest.height), tint);
-                    }
-                } break;
+		}
+		case OT_TILE: {
+		    int baseGid = head->content.gid;
+                    int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
+		    if (map->tiles[gid] != NULL) {
+                        DrawTMXTile(map->tiles[gid], (int)dest.x, (int)(dest.y - dest.height), tint, baseGid);
+		    }
+		    break;
+                }
                 case OT_TEXT: {
                     tmx_text* text = head->content.text;
                     Color textColor = ColorFromTMX(text->color);
@@ -299,12 +302,13 @@ void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
  * @param posY The Y position of the tile.
  * @param tint How to tint the tile when rendering.
  */
-void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
+void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint, int baseGid) {
     Texture* image = NULL;
     Rectangle srcRect;
     Vector2 position;
     position.x = (float)posX;
     position.y = (float)posY;
+    int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
 
 #ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
     // TODO: Process the animation https://github.com/baylej/tmx/pull/64
@@ -318,6 +322,9 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     srcRect.y      = (float)tile->ul_y;
     srcRect.width  = (float)tile->tileset->tile_width;
     srcRect.height = (float)tile->tileset->tile_height;
+
+    if (flags != 0) {
+    }
 
     // Find the image
     tmx_image *im = tile->image;
@@ -356,7 +363,7 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
                         DrawTMXTile(map->tiles[gid],
 			           (int)((unsigned int)posX + x * ts->tile_width),
 				   (int)((unsigned int)posY + y * ts->tile_height),
-			           newTint);
+			           newTint, baseGid);
                     }
                 }
             }
@@ -373,7 +380,7 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
 			DrawTMXTile(map->tiles[gid],
 			           (int)((unsigned int)posX + x * ts->tile_width),
 				   (int)((unsigned int)posY + y * ts->tile_height),
-			           newTint);
+			           newTint, baseGid);
                     }
                 }
             }
@@ -390,7 +397,7 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
 			DrawTMXTile(map->tiles[gid],
 			           (int)((unsigned int)posX + x * ts->tile_width),
 				   (int)((unsigned int)posY + y * ts->tile_height),
-			           newTint);
+			           newTint, baseGid);
                     }
                 }
             }
@@ -407,7 +414,7 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
 			DrawTMXTile(map->tiles[gid],
 			           (int)((unsigned int)posX + x * ts->tile_width),
 				   (int)((unsigned int)posY + y * ts->tile_height),
-			           newTint);
+			           newTint, baseGid);
                     }
                 }
             }
