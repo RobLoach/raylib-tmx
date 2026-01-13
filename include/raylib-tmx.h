@@ -33,6 +33,8 @@
 #ifndef INCLUDE_RAYLIB_TMX_H_
 #define INCLUDE_RAYLIB_TMX_H_
 
+#include <math.h>
+
 #include "raylib.h" // NOLINT
 #include "tmx.h" // NOLINT
 
@@ -324,6 +326,10 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint, int baseGid) {
     srcRect.height = (float)tile->tileset->tile_height;
 
     if (flags != 0) {
+	int is_horizontally_flipped = baseGid & TMX_FLIPPED_HORIZONTALLY;
+	if (is_horizontally_flipped != 0) srcRect.width = -fabs(srcRect.width);
+	int is_vertically_flipped   = baseGid & TMX_FLIPPED_VERTICALLY;
+	if (is_vertically_flipped   != 0) srcRect.height = -fabs(srcRect.height);
     }
 
     // Find the image
