@@ -5,7 +5,7 @@ if (NOT raylib_FOUND)
         FetchContent_Declare(
         raylib
         GIT_REPOSITORY https://github.com/raysan5/raylib.git
-        GIT_TAG 1c3f9fa
+        GIT_TAG c1ab645ca298a2801097931d1079b10ff7eb9df8
         GIT_SHALLOW TRUE
     )
     FetchContent_GetProperties(raylib)
@@ -23,8 +23,8 @@ if (NOT tmx_FOUND)
     include(FetchContent)
         FetchContent_Declare(
         tmx
-        GIT_REPOSITORY https://github.com/RobLoach/tmx.git
-        GIT_TAG f88a433
+        GIT_REPOSITORY https://github.com/baylej/tmx.git
+        GIT_TAG 11ffdcd
         GIT_SHALLOW TRUE
     )
     FetchContent_GetProperties(tmx)
