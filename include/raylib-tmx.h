@@ -324,12 +324,16 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint, int baseGid) {
     srcRect.height = (float)tile->tileset->tile_height;
 
     if (flags != 0) {
-	int is_horizontally_flipped = baseGid & TMX_FLIPPED_HORIZONTALLY;
-	if (is_horizontally_flipped != 0) srcRect.width = -fabs(srcRect.width);
-	int is_vertically_flipped   = baseGid & TMX_FLIPPED_VERTICALLY;
-	if (is_vertically_flipped   != 0) srcRect.height = -fabs(srcRect.height);
-	// TODO: Handle diagonal flip
-	// int is_diagonally_flipped   = gid & TMX_FLIPPED_DIAGONALLY;
+	if (baseGid & TMX_FLIPPED_DIAGONALLY) {
+            srcRect.width = -fabs(srcRect.width);
+            srcRect.height = -fabs(srcRect.height);
+	} else {
+            if (baseGid & TMX_FLIPPED_HORIZONTALLY) {
+		srcRect.width = -fabs(srcRect.width);
+	    } else if (baseGid & TMX_FLIPPED_VERTICALLY) {
+		srcRect.height = -fabs(srcRect.height);
+	    }
+	}
     }
 
     // Find the image
