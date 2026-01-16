@@ -42,6 +42,14 @@
 extern "C" {
 #endif
 
+// TMX structs
+#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
+typedef struct AnimationState {
+    int currentFrame;
+    float frameCounter;
+} AnimationState;
+#endif
+
 // TMX functions
 tmx_map* LoadTMX(const char* fileName);                             // Load a Tiled .tmx tile map
 void UnloadTMX(tmx_map* map);                                       // Unload the given Tiled map
@@ -51,6 +59,10 @@ void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color ti
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render a single map layer on the screen
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
+
+#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
+unsigned int UpdateTMXTileAnimation(tmx_tile* tile);                                                   // Controls the animation state of a tile and return the LID of the current animation
+#endif
 
 #ifdef __cplusplus
 }
@@ -295,6 +307,34 @@ void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
     }
 }
 
+#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
+/**
+ * @internal
+ */
+unsigned int UpdateTMXTileAnimation(tmx_tile* tile){
+    AnimationState* animState = (AnimationState*) tile->user_data.pointer;
+    if (!animState) {
+        animState = malloc(sizeof(AnimationState));
+        animState->currentFrame = 0;
+        animState->frameCounter = 0.0f;
+    }
+    tile->user_data.pointer = animState;
+    int*   currentFrame       = &animState->currentFrame;
+    float* frameCounter       = &animState->frameCounter;
+    int    animationLength    = tile->animation_len;
+    tmx_anim_frame animation  = tile->animation[*currentFrame];
+    float frameThreshold = (GetFPS() * animation.duration) / 1000.0f;
+
+    (*frameCounter)++;
+    if (*frameCounter >= (frameThreshold)) {
+	*frameCounter = 0;
+	(*currentFrame)++;
+	if (*currentFrame >= animationLength) *currentFrame = 0;
+    }
+    return animation.tile_id;
+}
+#endif
+
 /**
  * Render a single TMX tile on the screen.
  *
@@ -309,14 +349,6 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     Vector2 position;
     position.x = (float)posX;
     position.y = (float)posY;
-
-#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
-    // TODO: Process the animation https://github.com/baylej/tmx/pull/64
-    if(tile->animation) {
-        int tile_id = tile->animation[tile->current_animation_frame].tile_id;
-        tile = &tile->tileset->tiles[tile_id];
-    }
-#endif
 
     srcRect.x      = (float)tile->ul_x;
     srcRect.y      = (float)tile->ul_y;
@@ -400,6 +432,15 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
             gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
             if (map->tiles[gid] != NULL) {
 		tile = map->tiles[gid];
+
+#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
+                if(tile->animation) {
+		    unsigned int lid = UpdateTMXTileAnimation(tile);
+		    gid  = map->ts_head->firstgid + lid;
+		    tile = map->tiles[gid];
+		}
+#endif
+
 		position.x = (float)(((unsigned int)posX + x) * tile->width);
 		position.y = (float)(((unsigned int)posY + y) * tile->height);
                 DrawTMXTile(tile, posX, posY, newTint);
