@@ -48,6 +48,9 @@ typedef struct AnimationState {
     int currentFrame;
     float frameCounter;
 } AnimationState;
+
+#define tmx_list_foreach(Type, it, list) for (Type *it = (list); it != NULL; it = it->next)
+
 #endif
 
 // TMX functions
