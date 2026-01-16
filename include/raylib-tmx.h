@@ -175,6 +175,33 @@ tmx_map* LoadTMX(const char* fileName) {
  */
 void UnloadTMX(tmx_map* map) {
     if (map) {
+
+#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
+	tmx_list_foreach(tmx_layer, layer, map->ly_head) {
+	    switch (layer->type)
+	    {
+		default: continue; break;
+		case L_LAYER: {
+		    for (unsigned int y = 0; y < map->height; y++) {
+			for (unsigned int x = 0; x < map->width; x++) {
+			    unsigned int index = (y * map->width) + x;
+			    unsigned int baseGid = layer->content.gids[index];
+			    unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
+			    if (map->tiles[gid] != NULL) {
+				tmx_tile* tile = map->tiles[gid];
+				if(tile->animation) {
+				    if (tile->user_data.pointer != NULL) {
+					MemFree(tile->user_data.pointer);
+				    }
+				}
+			    }
+			}
+		    }
+		} break;
+	    }
+	}
+#endif
+
         tmx_map_free(map);
         TraceLog(LOG_INFO, "TMX: Unloaded map");
     }
