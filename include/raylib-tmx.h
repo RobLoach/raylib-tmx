@@ -57,7 +57,7 @@ Color ColorFromTMX(uint32_t color);                                 // Convert a
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint);         // Render the given Tiled map to the screen
 void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint); // Render all the given map layers to the screen
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render a single map layer on the screen
-void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);                                      // Render the given tile to the screen
+void DrawTMXTile(tmx_tile* tile, Vector2 position, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
 
 #ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
@@ -343,12 +343,9 @@ unsigned int UpdateTMXTileAnimation(tmx_tile* tile){
  * @param posY The Y position of the tile.
  * @param tint How to tint the tile when rendering.
  */
-void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
+void DrawTMXTile(tmx_tile* tile, Vector2 position, Color tint) {
     Texture* image = NULL;
     Rectangle srcRect;
-    Vector2 position;
-    position.x = (float)posX;
-    position.y = (float)posY;
 
     srcRect.x      = (float)tile->ul_x;
     srcRect.y      = (float)tile->ul_y;
@@ -441,9 +438,9 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
 		}
 #endif
 
-		position.x = (float)(((unsigned int)posX + x) * tile->width);
+                position.x = (float)(((unsigned int)posX + x) * tile->width);
 		position.y = (float)(((unsigned int)posY + y) * tile->height);
-                DrawTMXTile(tile, posX, posY, newTint);
+                DrawTMXTile(tile, position, newTint);
             }
         }
     }
