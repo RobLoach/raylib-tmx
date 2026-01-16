@@ -31,9 +31,8 @@ int main(int argc, char *argv[]) {
     const int orders[] = {R_NONE, R_RIGHTDOWN, R_RIGHTUP, R_LEFTDOWN, R_LEFTUP};
     const char *labels[] = {"R_NONE", "R_RIGHTDOWN", "R_RIGHTUP", "R_LEFTDOWN", "R_LEFTUP"};
     for (size_t i = 0; i < sizeof(orders)/sizeof(orders[0]); i++) {
-	const char* test_text = ("Draw %s", labels[i]);
-	trace(test_text);
-	map->renderorder = orders[i];
+	trace(TextFormat("Draw %s", labels[i]));
+	map->renderorder = (enum tmx_map_renderorder) orders[i];
 	BeginDrawing();
 	{
             ClearBackground(RAYWHITE);

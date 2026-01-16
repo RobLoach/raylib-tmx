@@ -262,7 +262,7 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
 		    int baseGid = head->content.gid;
                     int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
 		    if (map->tiles[gid] != NULL) {
-			DrawTMXObjectTile(map->tiles[gid], baseGid, dest, head->rotation, tint);
+			DrawTMXObjectTile(map->tiles[gid], baseGid, dest, (float)head->rotation, tint);
 		    }
 		} break;
                 case OT_TEXT: {
@@ -351,7 +351,6 @@ void DrawTMXObjectTile(tmx_tile* tile, int gid, Rectangle destRect, float rotati
     Texture* image = NULL;
     Rectangle srcRect;
     Vector2 origin = {0};
-    int flags = gid & ~TMX_FLIP_BITS_REMOVAL;
 
     srcRect.x      = (float)tile->ul_x;
     srcRect.y      = (float)tile->ul_y;
@@ -360,15 +359,15 @@ void DrawTMXObjectTile(tmx_tile* tile, int gid, Rectangle destRect, float rotati
 
     destRect.y     = destRect.y - destRect.height;
 
-    if (flags != 0) {
+    if (gid & ~TMX_FLIP_BITS_REMOVAL) {
 	if (gid & TMX_FLIPPED_DIAGONALLY) {
-            srcRect.width = -fabs(srcRect.width);
-            srcRect.height = -fabs(srcRect.height);
+            srcRect.width  = (float) -fabs(srcRect.width);
+            srcRect.height = (float) -fabs(srcRect.height);
 	} else {
-            if (gid & TMX_FLIPPED_HORIZONTALLY) {
-		srcRect.width = -fabs(srcRect.width);
+            if ((unsigned int)gid & TMX_FLIPPED_HORIZONTALLY) {
+		srcRect.width =  (float) -fabs(srcRect.width);
 	    } else if (gid & TMX_FLIPPED_VERTICALLY) {
-		srcRect.height = -fabs(srcRect.height);
+		srcRect.height = (float) -fabs(srcRect.height);
 	    }
 	}
     }
