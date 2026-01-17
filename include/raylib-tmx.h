@@ -304,7 +304,15 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
 		    int baseGid = head->content.gid;
                     int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
 		    if (map->tiles[gid] != NULL) {
-			DrawTMXObjectTile(map->tiles[gid], baseGid, dest, (float)head->rotation, tint);
+			tmx_tile *tile = map->tiles[gid];
+#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
+			if(tile->animation) {
+			    unsigned int lid = UpdateTMXTileAnimation(tile);
+			    gid  = map->ts_head->firstgid + lid;
+			    tile = map->tiles[gid];
+			}
+#endif
+			DrawTMXObjectTile(tile, baseGid, dest, (float)head->rotation, tint);
 		    }
 		} break;
                 case OT_TEXT: {
