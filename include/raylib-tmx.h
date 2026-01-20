@@ -33,6 +33,7 @@
 #ifndef INCLUDE_RAYLIB_TMX_H_
 #define INCLUDE_RAYLIB_TMX_H_
 
+#include <stdlib.h>
 #include <math.h>
 
 #include "raylib.h" // NOLINT
@@ -60,7 +61,6 @@ void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint
 void DrawTMXTile(tmx_tile* tile, Vector2 position, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
 unsigned int UpdateTMXTileAnimation(tmx_tile* tile);                                                   // Controls the animation state of a tile and return the LID of the current animation
-
 
 #ifdef __cplusplus
 }
@@ -298,7 +298,7 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
 			tmx_tile *tile = map->tiles[gid];
 			if(tile->animation) {
 			    unsigned int lid = UpdateTMXTileAnimation(tile);
-			    gid  = map->ts_head->firstgid + lid;
+			    gid = (int)(map->ts_head->firstgid + lid);
 			    tile = map->tiles[gid];
 			}
 			DrawTMXObjectTile(tile, baseGid, dest, (float)head->rotation, tint);
@@ -343,14 +343,13 @@ unsigned int UpdateTMXTileAnimation(tmx_tile* tile){
         animState = malloc(sizeof(AnimationState));
         animState->currentFrame = 0;
         animState->frameCounter = 0.0f;
+	tile->user_data.pointer = animState;
     }
-    tile->user_data.pointer = animState;
-    int*   currentFrame       = &animState->currentFrame;
-    float* frameCounter       = &animState->frameCounter;
-    int    animationLength    = tile->animation_len;
-    tmx_anim_frame animation  = tile->animation[*currentFrame];
-    float frameThreshold = (GetFPS() * animation.duration) / 1000.0f;
-
+    int*   currentFrame      = &animState->currentFrame;
+    float* frameCounter      = &animState->frameCounter;
+    int    animationLength   = (int)tile->animation_len;
+    tmx_anim_frame animation = tile->animation[*currentFrame];
+    float  frameThreshold    = (float)(GetFPS() * (int)animation.duration) / 1000.0f;    
     (*frameCounter)++;
     if (*frameCounter >= (frameThreshold)) {
 	*frameCounter = 0;
