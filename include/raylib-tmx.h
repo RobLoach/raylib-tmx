@@ -43,15 +43,12 @@ extern "C" {
 #endif
 
 // TMX structs
-#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
 typedef struct AnimationState {
     int currentFrame;
     float frameCounter;
 } AnimationState;
 
 #define tmx_list_foreach(Type, it, list) for (Type *it = (list); it != NULL; it = it->next)
-
-#endif
 
 // TMX functions
 tmx_map* LoadTMX(const char* fileName);                             // Load a Tiled .tmx tile map
@@ -62,10 +59,8 @@ void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color ti
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render a single map layer on the screen
 void DrawTMXTile(tmx_tile* tile, Vector2 position, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
-
-#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
 unsigned int UpdateTMXTileAnimation(tmx_tile* tile);                                                   // Controls the animation state of a tile and return the LID of the current animation
-#endif
+
 
 #ifdef __cplusplus
 }
@@ -175,8 +170,6 @@ tmx_map* LoadTMX(const char* fileName) {
  */
 void UnloadTMX(tmx_map* map) {
     if (map) {
-
-#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
 	tmx_list_foreach(tmx_layer, layer, map->ly_head) {
 	    switch (layer->type)
 	    {
@@ -200,8 +193,6 @@ void UnloadTMX(tmx_map* map) {
 		} break;
 	    }
 	}
-#endif
-
         tmx_map_free(map);
         TraceLog(LOG_INFO, "TMX: Unloaded map");
     }
@@ -305,13 +296,11 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
                     int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
 		    if (map->tiles[gid] != NULL) {
 			tmx_tile *tile = map->tiles[gid];
-#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
 			if(tile->animation) {
 			    unsigned int lid = UpdateTMXTileAnimation(tile);
 			    gid  = map->ts_head->firstgid + lid;
 			    tile = map->tiles[gid];
 			}
-#endif
 			DrawTMXObjectTile(tile, baseGid, dest, (float)head->rotation, tint);
 		    }
 		} break;
@@ -345,7 +334,6 @@ void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
     }
 }
 
-#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
 /**
  * @internal
  */
@@ -371,7 +359,6 @@ unsigned int UpdateTMXTileAnimation(tmx_tile* tile){
     }
     return animation.tile_id;
 }
-#endif
 
 /**
  * Render a single TMX tile on the screen.
@@ -467,15 +454,11 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
             gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
             if (map->tiles[gid] != NULL) {
 		tile = map->tiles[gid];
-
-#ifdef RAYLIB_TMX_SUPPORT_ANIMATIONS
                 if(tile->animation) {
 		    unsigned int lid = UpdateTMXTileAnimation(tile);
 		    gid  = map->ts_head->firstgid + lid;
 		    tile = map->tiles[gid];
 		}
-#endif
-
                 position.x = (float)(((unsigned int)posX + x) * tile->width);
 		position.y = (float)(((unsigned int)posY + y) * tile->height);
                 DrawTMXTile(tile, position, newTint);
