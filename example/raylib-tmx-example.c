@@ -22,8 +22,8 @@ int main(int argc, char *argv[]) {
     // Make sure we're running in the correct directory.
     ChangeDirectory(GetDirectoryPath(argv[0]));
 
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+    const int screenWidth = 1280;
+    const int screenHeight = 720;
     InitWindow(screenWidth, screenHeight, "[raylib-tmx] example");
     SetTargetFPS(60);
 
