@@ -58,7 +58,7 @@ Color ColorFromTMX(uint32_t color);                                 // Convert a
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint);         // Render the given Tiled map to the screen
 void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint); // Render all the given map layers to the screen
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render a single map layer on the screen
-void DrawTMXTile(tmx_tile* tile, Vector2 position, Color tint);                                      // Render the given tile to the screen
+void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
 unsigned int UpdateTMXTileAnimation(tmx_tile* tile);                                                   // Controls the animation state of a tile and return the LID of the current animation
 
@@ -367,9 +367,12 @@ unsigned int UpdateTMXTileAnimation(tmx_tile* tile){
  * @param posY The Y position of the tile.
  * @param tint How to tint the tile when rendering.
  */
-void DrawTMXTile(tmx_tile* tile, Vector2 position, Color tint) {
+void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     Texture* image = NULL;
     Rectangle srcRect;
+    Vector2 position;
+    position.x = (float)posX;
+    position.y = (float)posY;
 
     srcRect.x      = (float)tile->ul_x;
     srcRect.y      = (float)tile->ul_y;
@@ -442,26 +445,25 @@ void DrawTMXObjectTile(tmx_tile* tile, int gid, Rectangle destRect, float rotati
  */
 void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint)
 {
-    unsigned int gid, baseGid;
-    tmx_tile *tile;
-    Vector2 position;
     Color newTint = ColorAlpha(tint, (float)layer->opacity);
-    for (unsigned int y = 0; y < map->height; y++) {
-        for (unsigned int x = 0; x < map->width; x++) {
+    for (unsigned int y = 0; y < map->height; y++)
+    {
+        for (unsigned int x = 0; x < map->width; x++)
+	{
 	    unsigned int cellIndex = (y * map->width) + x;
-            baseGid = layer->content.gids[cellIndex];
-            gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
-            if (map->tiles[gid] != NULL) {
+            unsigned int baseGid = layer->content.gids[cellIndex];
+            unsigned int gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
+            if (!map->tiles[gid]) continue;
+	    tmx_tile* tile = map->tiles[gid];
+            if(tile->animation)
+	    {
+		unsigned int lid = UpdateTMXTileAnimation(tile);
+		gid  = map->ts_head->firstgid + lid;
 		tile = map->tiles[gid];
-                if(tile->animation) {
-		    unsigned int lid = UpdateTMXTileAnimation(tile);
-		    gid  = map->ts_head->firstgid + lid;
-		    tile = map->tiles[gid];
-		}
-                position.x = (float)(((unsigned int)posX + x) * tile->width);
-		position.y = (float)(((unsigned int)posY + y) * tile->height);
-                DrawTMXTile(tile, position, newTint);
-            }
+	    }
+	    int drawX = (int)((unsigned int)posX + x * tile->width);
+	    int drawY = (int)((unsigned int)posY + y * tile->height);
+	    DrawTMXTile(tile, drawX, drawY, newTint);
         }
     }
 }
