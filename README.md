@@ -76,12 +76,16 @@ cd examples
 
 This is not the only attempt to get Tiled working in raylib...
 
-- [raylib-tileson](https://github.com/robloach/raylib-tileson)
-- [raylib-tiled](https://github.com/RobLoach/raylib-tiled)
+- [raylib-tileson](https://github.com/robloach/raylib-tileson): Uses the [tileson C++ library](https://github.com/SSBMTonberry/tileson)
+- [raylib-tiled](https://github.com/RobLoach/raylib-tiled): Not working, but leverages the [cute_tiled.h library](https://github.com/RandyGaul/cute_headers/blob/master/cute_tiled.h) instead
 
 ## Credits
 
-This uses the [TMX C Loader](https://github.com/baylej/tmx), which is licensed under the [BSD 2-Clause "Simplified" License](https://github.com/baylej/tmx/blob/master/COPYING). Thank you to [Bayle Jonathan](https://github.com/baylej) for putting it together, and the [tmx example](https://github.com/baylej/tmx/blob/master/examples/raylib/raylib.c) this was inspired from.
+Thank you to...
+
+- [TMX C Loader](https://github.com/baylej/tmx), which is licensed under the [BSD 2-Clause "Simplified" License](https://github.com/baylej/tmx/blob/master/COPYING)
+- [Bayle Jonathan](https://github.com/baylej) for TMX C Loader, and the [tmx example](https://github.com/baylej/tmx/blob/master/examples/raylib/raylib.c) this was inspired from
+- [cortexmancer](https://github.com/cortexmancer) for fixing tile flipping, and adding animations
 
 ## License
 
