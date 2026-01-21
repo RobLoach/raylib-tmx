@@ -17,6 +17,8 @@ If you're using CMake, *libxml2* and *zlib* come packed in.
 
 ### Example
 
+See the [example directory](example) for a demonstration of how to use *raylib-tmx*.
+
 ``` c
 #include "raylib.h"
 
@@ -45,8 +47,6 @@ int main() {
 }
 ```
 
-See the [example directory](example) for a demonstration of how to use *raylib-tmx*. Refer to the [libTMX documentation](http://libtmx.rtfd.io/) to see how to use the `tmx_map*` map object beyond rendering.
-
 ### API
 
 ``` c
@@ -57,6 +57,8 @@ void DrawTMX(tmx_map *map, int posX, int posY, Color tint);
 void DrawTMXLayer(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint);
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);
 ```
+
+Refer to the [libTMX documentation](http://libtmx.rtfd.io/) to see how to use the `tmx_map*` map object beyond rendering.
 
 ## Development
 
@@ -76,12 +78,16 @@ cd examples
 
 This is not the only attempt to get Tiled working in raylib...
 
-- [raylib-tileson](https://github.com/robloach/raylib-tileson)
-- [raylib-tiled](https://github.com/RobLoach/raylib-tiled)
+- [raylib-tileson](https://github.com/robloach/raylib-tileson): Uses the [tileson C++ library](https://github.com/SSBMTonberry/tileson)
+- [raylib-tiled](https://github.com/RobLoach/raylib-tiled): Not working, but leverages the [cute_tiled.h library](https://github.com/RandyGaul/cute_headers/blob/master/cute_tiled.h) instead
 
-## Credits
+## Contributors
 
-This uses the [TMX C Loader](https://github.com/baylej/tmx), which is licensed under the [BSD 2-Clause "Simplified" License](https://github.com/baylej/tmx/blob/master/COPYING). Thank you to [Bayle Jonathan](https://github.com/baylej) for putting it together, and the [tmx example](https://github.com/baylej/tmx/blob/master/examples/raylib/raylib.c) this was inspired from.
+- [Bayle Jonathan](https://github.com/baylej) for TMX C Loader, and the [tmx example](https://github.com/baylej/tmx/blob/master/examples/raylib/raylib.c) this was inspired from
+- [burakssen](https://github.com/burakssen)
+- [mattj1](https://github.com/mattj1)
+- [brccabral](https://github.com/brccabral)
+- [cortexmancer](https://github.com/cortexmancer)
 
 ## License
 
