@@ -17,7 +17,7 @@ If you're using CMake, *libxml2* and *zlib* come packed in.
 
 ### Example
 
-See the [example directory](example) for a demonstration of how to use *raylib-tmx*. Refer to the [libTMX documentation](http://libtmx.rtfd.io/) to see how to use the `tmx_map*` map object beyond rendering.
+See the [example directory](example) for a demonstration of how to use *raylib-tmx*.
 
 ``` c
 #include "raylib.h"
@@ -57,6 +57,8 @@ void DrawTMX(tmx_map *map, int posX, int posY, Color tint);
 void DrawTMXLayer(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint);
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);
 ```
+
+Refer to the [libTMX documentation](http://libtmx.rtfd.io/) to see how to use the `tmx_map*` map object beyond rendering.
 
 ## Development
 
