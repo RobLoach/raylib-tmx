@@ -295,15 +295,23 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
 		        case OT_TILE: {
 		            int baseGid = head->content.gid;
                     int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
-		            if (map->tiles[gid] != NULL) {
-			            tmx_tile *tile = map->tiles[gid];
-			            if(tile->animation) {
-			                unsigned int lid = UpdateTMXTileAnimation(tile);
-			                gid = (int)(map->ts_head->firstgid + lid);
-			                tile = map->tiles[gid];
-			            }
-			            DrawTMXObjectTile(tile, baseGid, dest, (float)head->rotation, tint);
-		            }
+		            if (!map->tiles[gid]) continue;
+			        tmx_tile *tile = map->tiles[gid];
+                    if(tile->animation) {
+		                unsigned int lid = UpdateTMXTileAnimation(tile);
+                        tmx_tileset_list* tileset_list = map->ts_head;
+                        while (tileset_list) {
+                            if (tile->tileset == tileset_list->tileset) {
+                                gid  = tileset_list->firstgid + lid;
+                                if (map->tiles[gid]) {
+                                    tile = map->tiles[gid];
+                                    break;
+                                }
+                            }
+                            tileset_list = tileset_list->next;
+                        }
+	                }
+			        DrawTMXObjectTile(tile, baseGid, dest, (float)head->rotation, tint);
 		        } break;
                 case OT_TEXT: {
                     tmx_text* text = head->content.text;
@@ -455,8 +463,17 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
 	        tmx_tile* tile = map->tiles[gid];
             if(tile->animation) {
 		        unsigned int lid = UpdateTMXTileAnimation(tile);
-		        gid  = map->ts_head->firstgid + lid;
-		        tile = map->tiles[gid];
+                tmx_tileset_list* tileset_list = map->ts_head;
+                while (tileset_list) {
+                    if (tile->tileset == tileset_list->tileset) {
+                        gid  = tileset_list->firstgid + lid;
+                        if (map->tiles[gid]) {
+                            tile = map->tiles[gid];
+                            break;
+                        }
+                    }
+                    tileset_list = tileset_list->next;
+                }
 	        }
 	        int drawX = (int)((unsigned int)posX + x * tile->width);
 	        int drawY = (int)((unsigned int)posY + y * tile->height);
