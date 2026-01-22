@@ -60,7 +60,7 @@ void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color ti
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render a single map layer on the screen
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
-unsigned int UpdateTMXTileAnimation(tmx_tile* tile);                                                   // Controls the animation state of a tile and return the LID of the current animation
+void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile);                                                   // Controls the animation state of a tile and return the LID of the current animation
 
 #ifdef __cplusplus
 }
@@ -297,20 +297,7 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
                     int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
 		            if (!map->tiles[gid]) continue;
 			        tmx_tile *tile = map->tiles[gid];
-                    if(tile->animation) {
-		                unsigned int lid = UpdateTMXTileAnimation(tile);
-                        tmx_tileset_list* tileset_list = map->ts_head;
-                        while (tileset_list) {
-                            if (tile->tileset == tileset_list->tileset) {
-                                gid  = tileset_list->firstgid + lid;
-                                if (map->tiles[gid]) {
-                                    tile = map->tiles[gid];
-                                    break;
-                                }
-                            }
-                            tileset_list = tileset_list->next;
-                        }
-	                }
+                    if (tile->animation) UpdateTMXTileAnimation(map, &tile);
 			        DrawTMXObjectTile(tile, baseGid, dest, (float)head->rotation, tint);
 		        } break;
                 case OT_TEXT: {
@@ -346,26 +333,39 @@ void DrawTMXLayerImage(tmx_image *image, int posX, int posY, Color tint) {
 /**
  * @internal
  */
-unsigned int UpdateTMXTileAnimation(tmx_tile* tile){
-    AnimationState* animState = (AnimationState*) tile->user_data.pointer;
+void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile){
+    tmx_tile* currentTile = *tile;
+    AnimationState* animState = (AnimationState*) currentTile->user_data.pointer;
     if (!animState) {
         animState = malloc(sizeof(AnimationState));
         animState->currentFrame = 0;
         animState->frameCounter = 0.0f;
-	    tile->user_data.pointer = animState;
+	    currentTile->user_data.pointer = animState;
     }
     int*   currentFrame      = &animState->currentFrame;
     float* frameCounter      = &animState->frameCounter;
-    int    animationLength   = (int)tile->animation_len;
-    tmx_anim_frame animation = tile->animation[*currentFrame];
+    int    animationLength   = (int)currentTile->animation_len;
+    tmx_anim_frame animation = currentTile->animation[*currentFrame];
     float  frameThreshold    = (float)(GetFPS() * (int)animation.duration) / 1000.0f;    
+
     (*frameCounter)++;
     if (*frameCounter >= (frameThreshold)) {
 	    *frameCounter = 0;
 	    (*currentFrame)++;
 	    if (*currentFrame >= animationLength) *currentFrame = 0;
     }
-    return animation.tile_id;
+
+    tmx_tileset_list* tileset_list = map->ts_head;
+    while (tileset_list) {
+        if (currentTile->tileset == tileset_list->tileset) {
+            unsigned int gid = tileset_list->firstgid + animation.tile_id;
+            if (map->tiles[gid]) {
+                *tile = map->tiles[gid];
+                return;
+            }
+        }
+        tileset_list = tileset_list->next;
+    }
 }
 
 /**
@@ -461,20 +461,7 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
             unsigned int gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
             if (!map->tiles[gid]) continue;
 	        tmx_tile* tile = map->tiles[gid];
-            if(tile->animation) {
-		        unsigned int lid = UpdateTMXTileAnimation(tile);
-                tmx_tileset_list* tileset_list = map->ts_head;
-                while (tileset_list) {
-                    if (tile->tileset == tileset_list->tileset) {
-                        gid  = tileset_list->firstgid + lid;
-                        if (map->tiles[gid]) {
-                            tile = map->tiles[gid];
-                            break;
-                        }
-                    }
-                    tileset_list = tileset_list->next;
-                }
-	        }
+            if (tile->animation) UpdateTMXTileAnimation(map, &tile);
 	        int drawX = (int)((unsigned int)posX + x * tile->width);
 	        int drawY = (int)((unsigned int)posY + y * tile->height);
 	        DrawTMXTile(tile, drawX, drawY, newTint);
