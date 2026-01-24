@@ -49,6 +49,18 @@ typedef struct AnimationState {
     float frameCounter;
 } AnimationState;
 
+typedef union {
+	Rectangle rect;
+} RaylibTMXCollision;
+
+typedef void (*tmx_collision_functor)(tmx_object *object, RaylibTMXCollision collision, void* userdata);
+typedef struct {
+    tmx_collision_functor collision_callback;
+    void* userdata;
+} collision_callback_wrapper;
+
+typedef void (*tmx_object_functor)(tmx_object *object, void* userdata);
+
 #define tmx_list_foreach(Type, it, list) for (Type *it = (list); it != NULL; it = it->next)
 
 // TMX functions
@@ -61,6 +73,7 @@ void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
 void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile);                                                   // Controls the animation state of a tile and return the LID of the current animation
+void HandleCollisions(tmx_map *map, tmx_collision_functor collision_callback, void* userdata);         // TODO
 
 #ifdef __cplusplus
 }
