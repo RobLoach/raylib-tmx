@@ -16,6 +16,17 @@
 #define RAYLIB_TMX_IMPLEMENTATION
 #include "raylib-tmx.h"
 
+void DrawCollisons(tmx_object *object, RaylibTMXCollision collision, void* userdata) {
+    bool *draw = (bool*)userdata;
+    if (!*draw) return;
+    switch (object->obj_type)
+    {
+	    case OT_SQUARE: DrawRectangleRec(collision.rect, BLUE); break;
+	    case OT_TILE:   DrawRectangleRec(collision.rect, RED);  break;
+	    default: return; break;
+    }
+}
+
 int main(int argc, char *argv[]) {
     // Initialization
     //--------------------------------------------------------------------------------------
@@ -29,6 +40,7 @@ int main(int argc, char *argv[]) {
 
     tmx_map* map = LoadTMX(argc > 1 ? argv[1] : "resources/desert.tmx");
     Vector2 position = {0, 0};
+    bool drawCollisions = false;
     //--------------------------------------------------------------------------------------
 
     while(!WindowShouldClose()) {
@@ -47,6 +59,7 @@ int main(int argc, char *argv[]) {
         if (IsKeyDown(KEY_DOWN)) {
             position.y -= 2;
         }
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) drawCollisions = !drawCollisions;
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -55,6 +68,7 @@ int main(int argc, char *argv[]) {
         {
             ClearBackground(RAYWHITE);
             DrawTMX(map, position.x, position.y, WHITE);
+            HandleCollisions(map, DrawCollisons, &drawCollisions);
             DrawFPS(10, 10);
         }
         EndDrawing();
