@@ -572,6 +572,102 @@ void DrawTMX(tmx_map *map, int posX, int posY, Color tint) {
 	DrawTMXLayers(map, map->ly_head, posX, posY, tint);
 }
 
+/**
+ * @internal
+ */
+void tmx_object_foreach(tmx_map *map, tmx_object_functor callback, void* userdata) {
+    tmx_list_foreach(tmx_layer, layer, map->ly_head) {
+	    if (!layer->visible) continue;
+	    switch (layer->type)
+	    {
+	        case L_LAYER: {
+		        for (unsigned int y = 0; y < map->height; y++) {
+		            for (unsigned int x = 0; x < map->width; x++) {
+			            unsigned int index = (y * map->width) + x;
+			            unsigned int baseGid = layer->content.gids[index];
+			            unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
+			            tmx_tile* tile = map->tiles[gid];
+			            if (!tile || !tile->collision) continue;
+			            tmx_object collision = *tile->collision;
+                        collision.x = collision.x + (x * tile->width);
+                        collision.y = collision.y + (y * tile->height);
+			            callback(&collision, userdata);
+		            }
+		        }
+	        } break;
+	        case L_OBJGR: {
+		        tmx_list_foreach(tmx_object, object, layer->content.objgr->head) {
+                    callback(object, userdata);
+                    if (object->obj_type != OT_TILE) continue;
+		            int baseGid = object->content.gid;
+		            unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
+		            tmx_tile* tile = map->tiles[gid];
+		            if (!tile || !tile->collision) continue;
+                    tmx_object collision = *tile->collision;
+                    collision.x += object->x;
+                    collision.y += object->y;
+                    if (baseGid & ~TMX_FLIP_BITS_REMOVAL) {
+	                    if (baseGid & TMX_FLIPPED_DIAGONALLY) {
+                            // TODO: TMX_FLIPPED_DIAGONALLY SEENS TO NOT BE WORKING
+	                    } else {
+                            if (baseGid & TMX_FLIPPED_HORIZONTALLY) {
+                                collision.x += collision.width;
+                                collision.y -= object->height;
+                            } else if (baseGid & TMX_FLIPPED_VERTICALLY) {
+                                collision.y -= collision.height;
+	                        }
+	                    }
+                    } else {
+                        collision.y -= object->height;
+                    }
+                    collision.visible = object->visible;
+                    callback(&collision, userdata);
+		        }
+	        } break;
+	        default: continue; break;
+	    }
+    };
+}
+
+/**
+ * @internal
+ */
+void handle_tmx_collision(tmx_object *object, void* userdata) {
+    collision_callback_wrapper* wrapper = (collision_callback_wrapper*)userdata;
+    RaylibTMXCollision collision;
+    switch (object->obj_type)
+    {
+	    case OT_SQUARE: {
+	        collision.rect = (Rectangle) {
+                .x      = (float) object->x,
+                .y      = (float) object->y,
+                .width  = (float) object->width,
+                .height = (float) object->height
+            };
+	    } break;
+	    case OT_TILE: {
+            collision.rect = (Rectangle) {
+                .x      = (float) object->x,
+                .y      = (float) object->y,
+                .width  = (float) object->width,
+                .height = (float) object->height
+            };
+            collision.rect.y -= (float) object->height;
+	    } break;
+	    default: return; break;
+    }
+    wrapper->collision_callback(object, collision, wrapper->userdata);
+}
+
+/**
+ * @TODO
+ */
+void HandleCollisions(tmx_map *map, tmx_collision_functor collision_callback, void* userdata) {
+    collision_callback_wrapper wrapper = {collision_callback, userdata};
+    tmx_object_foreach(map, handle_tmx_collision, &wrapper);
+}
+
+
 #ifdef __cplusplus
 }
 #endif
