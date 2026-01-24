@@ -620,7 +620,6 @@ void tmx_object_foreach(tmx_map *map, tmx_object_functor callback, void* userdat
                     } else {
                         collision.y -= object->height;
                     }
-                    collision.visible = object->visible;
                     callback(&collision, userdata);
 		        }
 	        } break;
