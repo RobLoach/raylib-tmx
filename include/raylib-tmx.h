@@ -623,7 +623,7 @@ void tmx_object_foreach(tmx_map *map, tmx_object_functor callback, void* userdat
                                 // TODO: TMX_FLIPPED_HORIZONTALLY
                             }
                             if (baseGid & TMX_FLIPPED_VERTICALLY) {
-                                // TODO: TMX_FLIPPED_VERTICALLY
+                                copy.y = object->y - (collision->y + collision->height);
                             }
                         }
                         callback(&copy, userdata);
