@@ -72,7 +72,7 @@ void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
 void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile);                                            // Controls the animation state of a tile and return the LID of the current animation
-void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor collision_callback, void* userdata);     // TODO
+void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* userdata);               // Returns each tmx_object on a given map and their collisions on a callback
 
 #ifdef __cplusplus
 }
@@ -573,7 +573,7 @@ void DrawTMX(tmx_map *map, int posX, int posY, Color tint) {
 /**
  * @internal
  */
-void handle_tmx_collision(tmx_object *object, tmx_collision_functor callback, void* userdata) {
+void HandleTMXCollision(tmx_object *object, tmx_collision_functor callback, void* userdata) {
     RaylibTMXCollision collision;
     switch (object->obj_type)
     {
@@ -618,7 +618,11 @@ void handle_tmx_collision(tmx_object *object, tmx_collision_functor callback, vo
 }
 
 /**
- * @TODO
+ * Returns each tmx_object on a given map and their collisions on a callback
+ *
+ * @param map       The map where collisions will be collected and calculated.
+ * @param callback  The callback function that the user wants to receive the collisions.
+ * @param userdata  The userdata that the user wnats to utilize within the callback.
  */
 void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* userdata) {
     tmx_list_foreach(tmx_layer, layer, map->ly_head) {
@@ -637,14 +641,14 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                             tmx_object copy = *collision;
                             copy.x += (x * tile->width);
                             copy.y += (y * tile->height);
-                            handle_tmx_collision(&copy, callback, userdata);
+                            HandleTMXCollision(&copy, callback, userdata);
                         }
                     }
                 }
             } break;
             case L_OBJGR: {
                 tmx_list_foreach(tmx_object, object, layer->content.objgr->head) {
-                    handle_tmx_collision(object, callback, userdata);
+                    HandleTMXCollision(object, callback, userdata);
                     if (object->obj_type != OT_TILE) continue;
                     int baseGid = object->content.gid;
                     unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
@@ -666,7 +670,7 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                                 copy.y = object->y - (collision->y + collision->height);
                             }
                         }
-                        handle_tmx_collision(&copy, callback, userdata);
+                        HandleTMXCollision(&copy, callback, userdata);
                     }
                 }
             } break;
