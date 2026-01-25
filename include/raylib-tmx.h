@@ -61,12 +61,6 @@ typedef union {
 } RaylibTMXCollision;
 
 typedef void (*tmx_collision_functor)(tmx_object *object, RaylibTMXCollision collision, void* userdata);
-typedef struct {
-    tmx_collision_functor collision_callback;
-    void* userdata;
-} collision_callback_wrapper;
-
-typedef void (*tmx_object_functor)(tmx_object *object, void* userdata);
 
 #define tmx_list_foreach(Type, it, list) for (Type *it = (list); it != NULL; it = it->next)
 
@@ -79,8 +73,8 @@ void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color ti
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint); // Render a single map layer on the screen
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
-void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile);                                                   // Controls the animation state of a tile and return the LID of the current animation
-void HandleTMXCollisions(tmx_map *map, tmx_collision_functor collision_callback, void* userdata);      // TODO
+void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile);                                            // Controls the animation state of a tile and return the LID of the current animation
+void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor collision_callback, void* userdata);     // TODO
 
 #ifdef __cplusplus
 }
@@ -581,64 +575,7 @@ void DrawTMX(tmx_map *map, int posX, int posY, Color tint) {
 /**
  * @internal
  */
-void tmx_object_foreach(tmx_map *map, tmx_object_functor callback, void* userdata) {
-    tmx_list_foreach(tmx_layer, layer, map->ly_head) {
-	    if (!layer->visible) continue;
-	    switch (layer->type)
-	    {
-	        case L_LAYER: {
-		        for (unsigned int y = 0; y < map->height; y++) {
-		            for (unsigned int x = 0; x < map->width; x++) {
-			            unsigned int index = (y * map->width) + x;
-			            unsigned int baseGid = layer->content.gids[index];
-			            unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
-			            tmx_tile* tile = map->tiles[gid];
-			            if (!tile || !tile->collision) continue;
-                        tmx_list_foreach(tmx_object, collision, tile->collision) {
-                            tmx_object copy = *collision;
-                            copy.x += (x * tile->width);
-                            copy.y += (y * tile->height);
-			                callback(&copy, userdata);
-		                }
-                    }
-		        }
-	        } break;
-	        case L_OBJGR: {
-		        tmx_list_foreach(tmx_object, object, layer->content.objgr->head) {
-                    callback(object, userdata);
-                    if (object->obj_type != OT_TILE) continue;
-		            int baseGid      = object->content.gid;
-		            unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
-                    if (!map->tiles[gid]) continue;
-                    tmx_list_foreach(tmx_object, collision, map->tiles[gid]->collision) {
-                        tmx_object copy = *collision;
-                        copy.x += object->x;
-                        copy.y += object->y - object->height;
-                        if (baseGid & ~TMX_FLIP_BITS_REMOVAL) {
-                            if (baseGid & TMX_FLIPPED_DIAGONALLY) {
-                                // TODO: TMX_FLIPPED_DIAGONALLY
-	                        }
-                            if (baseGid & TMX_FLIPPED_HORIZONTALLY) {
-                                copy.x += object->width - collision->width;
-                            }
-                            if (baseGid & TMX_FLIPPED_VERTICALLY) {
-                                copy.y = object->y - (collision->y + collision->height);
-                            }
-                        }
-                        callback(&copy, userdata);
-                    }
-		        }
-	        } break;
-	        default: continue; break;
-	    }
-    };
-}
-
-/**
- * @internal
- */
-void handle_tmx_collision(tmx_object *object, void* userdata) {
-    collision_callback_wrapper* wrapper = (collision_callback_wrapper*)userdata;
+void handle_tmx_collision(tmx_object *object, tmx_collision_functor callback, void* userdata) {
     RaylibTMXCollision collision;
     switch (object->obj_type)
     {
@@ -679,17 +616,67 @@ void handle_tmx_collision(tmx_object *object, void* userdata) {
         } break;
 	    default: return; break;
     }
-    wrapper->collision_callback(object, collision, wrapper->userdata);
+    callback(object, collision, userdata);
 }
 
 /**
  * @TODO
  */
-void HandleTMXCollisions(tmx_map *map, tmx_collision_functor collision_callback, void* userdata) {
-    collision_callback_wrapper wrapper = {collision_callback, userdata};
-    tmx_object_foreach(map, handle_tmx_collision, &wrapper);
+void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* userdata) {
+    tmx_list_foreach(tmx_layer, layer, map->ly_head) {
+        if (!layer->visible) continue;
+        switch (layer->type) {
+            case L_LAYER: {
+                for (unsigned int y = 0; y < map->height; y++) {
+                    for (unsigned int x = 0; x < map->width; x++) {
+                        unsigned int index = (y * map->width) + x;
+                        unsigned int baseGid = layer->content.gids[index];
+                        unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
+                        tmx_tile* tile = map->tiles[gid];
+                        if (!tile || !tile->collision) continue;
+                        
+                        tmx_list_foreach(tmx_object, collision, tile->collision) {
+                            tmx_object copy = *collision;
+                            copy.x += (x * tile->width);
+                            copy.y += (y * tile->height);
+                            handle_tmx_collision(&copy, callback, userdata);
+                        }
+                    }
+                }
+            } break;
+            case L_OBJGR: {
+                tmx_list_foreach(tmx_object, object, layer->content.objgr->head) {
+                    handle_tmx_collision(object, callback, userdata);
+                    if (object->obj_type != OT_TILE) continue;
+                    int baseGid = object->content.gid;
+                    unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
+                    if (!map->tiles[gid]) continue;
+                    
+                    tmx_list_foreach(tmx_object, collision, map->tiles[gid]->collision) {
+                        tmx_object copy = *collision;
+                        copy.x += object->x;
+                        copy.y += object->y - object->height;
+                        
+                        if (baseGid & ~TMX_FLIP_BITS_REMOVAL) {
+                            if (baseGid & TMX_FLIPPED_DIAGONALLY) {
+                                // TODO: TMX_FLIPPED_DIAGONALLY
+                            }
+                            if (baseGid & TMX_FLIPPED_HORIZONTALLY) {
+                                copy.x += object->width - collision->width;
+                            }
+                            if (baseGid & TMX_FLIPPED_VERTICALLY) {
+                                copy.y = object->y - (collision->y + collision->height);
+                            }
+                        }
+                        handle_tmx_collision(&copy, callback, userdata);
+                    }
+                }
+            } break;
+            
+            default: continue;
+        }
+    }
 }
-
 
 #ifdef __cplusplus
 }

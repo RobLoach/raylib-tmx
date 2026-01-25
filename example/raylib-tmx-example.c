@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             drawCollisions = !drawCollisions;
         }
-        HandleTMXCollisions(map, UpdateCollisons, map);
+        CollisionsTMXForeach(map, UpdateCollisons, map);
         if (selected != NULL) {
             Vector2 mousePosition = GetMousePosition();
             selected->x           = mousePosition.x;
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
         {
             ClearBackground(RAYWHITE);
             DrawTMX(map, position.x, position.y, WHITE);
-            if (drawCollisions) HandleTMXCollisions(map, DrawCollisons, &position);
+            if (drawCollisions) CollisionsTMXForeach(map, DrawCollisons, &position);
             DrawFPS(10, 10);
         }
         EndDrawing();
