@@ -80,7 +80,7 @@ void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
 void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile);                                                   // Controls the animation state of a tile and return the LID of the current animation
-void HandleCollisions(tmx_map *map, tmx_collision_functor collision_callback, void* userdata);         // TODO
+void HandleTMXCollisions(tmx_map *map, tmx_collision_functor collision_callback, void* userdata);      // TODO
 
 #ifdef __cplusplus
 }
@@ -686,7 +686,7 @@ void handle_tmx_collision(tmx_object *object, void* userdata) {
 /**
  * @TODO
  */
-void HandleCollisions(tmx_map *map, tmx_collision_functor collision_callback, void* userdata) {
+void HandleTMXCollisions(tmx_map *map, tmx_collision_functor collision_callback, void* userdata) {
     collision_callback_wrapper wrapper = {collision_callback, userdata};
     tmx_object_foreach(map, handle_tmx_collision, &wrapper);
 }

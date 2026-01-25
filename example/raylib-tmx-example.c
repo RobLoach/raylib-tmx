@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
         {
             ClearBackground(RAYWHITE);
             DrawTMX(map, position.x, position.y, WHITE);
-            if (drawCollisions) HandleCollisions(map, DrawCollisons, &position);
+            if (drawCollisions) HandleTMXCollisions(map, DrawCollisons, &position);
             DrawFPS(10, 10);
         }
         EndDrawing();
