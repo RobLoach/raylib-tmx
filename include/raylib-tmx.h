@@ -595,39 +595,28 @@ void tmx_object_foreach(tmx_map *map, tmx_object_functor callback, void* userdat
 			            unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
 			            tmx_tile* tile = map->tiles[gid];
 			            if (!tile || !tile->collision) continue;
-			            tmx_object collision = *tile->collision;
-                        collision.x += (x * tile->width);
-                        collision.y += (y * tile->height);
-			            callback(&collision, userdata);
-		            }
+                        tmx_list_foreach(tmx_object, collision, tile->collision) {
+                            tmx_object copy = *collision;
+                            copy.x += (x * tile->width);
+                            copy.y += (y * tile->height);
+			                callback(&copy, userdata);
+		                }
+                    }
 		        }
 	        } break;
 	        case L_OBJGR: {
 		        tmx_list_foreach(tmx_object, object, layer->content.objgr->head) {
                     callback(object, userdata);
                     if (object->obj_type != OT_TILE) continue;
-		            int baseGid = object->content.gid;
+		            int baseGid      = object->content.gid;
 		            unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
-		            tmx_tile* tile = map->tiles[gid];
-		            if (!tile || !tile->collision) continue;
-                    tmx_object collision = *tile->collision;
-                    collision.x += object->x;
-                    collision.y += object->y;
-                    if (baseGid & ~TMX_FLIP_BITS_REMOVAL) {
-	                    if (baseGid & TMX_FLIPPED_DIAGONALLY) {
-                            // TODO: TMX_FLIPPED_DIAGONALLY SEENS TO NOT BE WORKING
-	                    } else {
-                            if (baseGid & TMX_FLIPPED_HORIZONTALLY) {
-                                collision.x += collision.width;
-                                collision.y -= object->height;
-                            } else if (baseGid & TMX_FLIPPED_VERTICALLY) {
-                                collision.y -= collision.height;
-	                        }
-	                    }
-                    } else {
-                        collision.y -= object->height;
+                    if (!map->tiles[gid]) continue;
+                    tmx_list_foreach(tmx_object, collision, map->tiles[gid]->collision) {
+                        tmx_object copy = *collision;
+                        copy.x += object->x;
+                        copy.y += object->y - object->height;
+                        callback(&copy, userdata);
                     }
-                    callback(&collision, userdata);
 		        }
 	        } break;
 	        default: continue; break;
