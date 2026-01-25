@@ -209,5 +209,8 @@
    <polygon points="0,0 142.712,116.128 295.218,-20.987"/>
   </object>
   <object id="9" name="Sign Post" gid="46" x="356" y="182.667" width="32" height="32"/>
+  <object id="20" name="Polyline" type="Polyline" x="209" y="136">
+   <polyline points="0,0 1,232"/>
+  </object>
  </objectgroup>
 </map>
