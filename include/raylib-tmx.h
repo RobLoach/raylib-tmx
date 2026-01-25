@@ -174,35 +174,44 @@ tmx_map* LoadTMX(const char* fileName) {
 }
 
 /**
+ * Unload animations withing layers.
+ *
+ * @internal
+ */
+void UnloadAnimations(tmx_map* map) {
+    for (tmx_layer *layer = (map->ly_head); layer != NULL; layer = layer->next) {
+	    switch (layer->type)
+	    {
+		    default: continue; break;
+		    case L_LAYER: {
+		        for (unsigned int y = 0; y < map->height; y++) {
+			        for (unsigned int x = 0; x < map->width; x++) {
+			            unsigned int index = (y * map->width) + x;
+			            unsigned int baseGid = layer->content.gids[index];
+			            unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
+			            if (map->tiles[gid] != NULL) {
+				            tmx_tile* tile = map->tiles[gid];
+				            if(tile->animation) {
+				                if (tile->user_data.pointer != NULL) {
+					                MemFree(tile->user_data.pointer);
+				                }
+				            }
+			            }
+			        }
+		        }
+		    } break;
+	    }
+	}
+}
+
+/**
  * Unloads the given TMX map.
  *
  * @param map The map to unload.
  */
 void UnloadTMX(tmx_map* map) {
     if (map) {
-        for (tmx_layer *layer = (map->ly_head); layer != NULL; layer = layer->next) {
-	        switch (layer->type)
-	        {
-		        default: continue; break;
-		        case L_LAYER: {
-		            for (unsigned int y = 0; y < map->height; y++) {
-			            for (unsigned int x = 0; x < map->width; x++) {
-			                unsigned int index = (y * map->width) + x;
-			                unsigned int baseGid = layer->content.gids[index];
-			                unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
-			                if (map->tiles[gid] != NULL) {
-				                tmx_tile* tile = map->tiles[gid];
-				                if(tile->animation) {
-				                    if (tile->user_data.pointer != NULL) {
-					                    MemFree(tile->user_data.pointer);
-				                    }
-				                }
-			                }
-			            }
-		            }
-		        } break;
-	        }
-	    }
+        UnloadAnimations(map);
         tmx_map_free(map);
         TraceLog(LOG_INFO, "TMX: Unloaded map");
     }
