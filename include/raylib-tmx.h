@@ -49,15 +49,13 @@ typedef struct AnimationState {
     float frameCounter;
 } AnimationState;
 
-typedef struct {
-    double** points;
-    int count;
-} TMXPolygon;
-
 typedef union {
-	Rectangle  rect;
-    Vector2    point;
-    TMXPolygon polygon;
+    Rectangle rect;
+    Vector2   point;
+    struct {
+        double** points;
+        int count;
+    } polygon;
 } RaylibTMXCollision;
 
 typedef void (*tmx_collision_functor)(tmx_object *object, RaylibTMXCollision collision, void* userdata);
