@@ -17,12 +17,41 @@
 #include "raylib-tmx.h"
 
 void DrawCollisons(tmx_object *object, RaylibTMXCollision collision, void* userdata) {
-    bool *draw = (bool*)userdata;
-    if (!*draw) return;
+    Vector2* position = (Vector2*)userdata;
     switch (object->obj_type)
     {
-	    case OT_SQUARE: DrawRectangleRec(collision.rect, BLUE); break;
-	    case OT_TILE:   DrawRectangleRec(collision.rect, RED);  break;
+	    case OT_SQUARE: {
+            collision.rect.x += position->x;
+            collision.rect.y += position->y;
+            DrawRectangleRec(collision.rect, BLUE);
+        } break;
+	    case OT_TILE: {
+            collision.rect.x += position->x;
+            collision.rect.y += position->y;
+            DrawRectangleRec(collision.rect, RED);
+        } break;
+        case OT_POINT: {
+            collision.point.x += position->x;
+            collision.point.y += position->y;
+            int centerX = (int)(collision.point.x + object->width / 2.0);
+            int centerY = (int)(collision.point.y + object->height / 2.0);
+            DrawCircle(centerX, centerY, 5.0f, YELLOW);
+            DrawPixelV(collision.point, PURPLE);
+        } break;
+        case OT_POLYGON: {
+            double** points = collision.polygon.points;
+            int count       = collision.polygon.count;
+            double offset_x = object->x + position->x;
+            double offset_y = object->y + position->y;
+            DrawTMXPolygon(offset_x, offset_y, points, count, ORANGE);
+        } break;
+        case OT_ELLIPSE: {
+            int centerX   = (int)(collision.rect.x + position->x);
+            int centerY   = (int)(collision.rect.y + position->y);
+            float radiusH = (float)(collision.rect.width);
+            float radiusV = (float)(collision.rect.height);
+            DrawEllipseLines(centerX, centerY, radiusH, radiusV, GREEN);
+        } break;
 	    default: return; break;
     }
 }
@@ -68,7 +97,7 @@ int main(int argc, char *argv[]) {
         {
             ClearBackground(RAYWHITE);
             DrawTMX(map, position.x, position.y, WHITE);
-            HandleCollisions(map, DrawCollisons, &drawCollisions);
+            if (drawCollisions) HandleCollisions(map, DrawCollisons, &position);
             DrawFPS(10, 10);
         }
         EndDrawing();

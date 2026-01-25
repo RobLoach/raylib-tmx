@@ -49,8 +49,15 @@ typedef struct AnimationState {
     float frameCounter;
 } AnimationState;
 
+typedef struct {
+    double** points;
+    int count;
+} TMXPolygon;
+
 typedef union {
-	Rectangle rect;
+	Rectangle  rect;
+    Vector2    point;
+    TMXPolygon polygon;
 } RaylibTMXCollision;
 
 typedef void (*tmx_collision_functor)(tmx_object *object, RaylibTMXCollision collision, void* userdata);
@@ -589,8 +596,8 @@ void tmx_object_foreach(tmx_map *map, tmx_object_functor callback, void* userdat
 			            tmx_tile* tile = map->tiles[gid];
 			            if (!tile || !tile->collision) continue;
 			            tmx_object collision = *tile->collision;
-                        collision.x = collision.x + (x * tile->width);
-                        collision.y = collision.y + (y * tile->height);
+                        collision.x += (x * tile->width);
+                        collision.y += (y * tile->height);
 			            callback(&collision, userdata);
 		            }
 		        }
@@ -653,6 +660,24 @@ void handle_tmx_collision(tmx_object *object, void* userdata) {
             };
             collision.rect.y -= (float) object->height;
 	    } break;
+        case OT_POINT: {
+            collision.point = (Vector2) {
+                .x = (float)object->x,
+                .y = (float)object->y
+            };
+        } break;
+        case OT_POLYGON: {
+            collision.polygon.points = object->content.shape->points;
+            collision.polygon.count  = object->content.shape->points_len;
+        } break;
+        case OT_ELLIPSE: {
+            collision.rect = (Rectangle) {
+                .x      = (float) (object->x + object->width  / 2.0f),
+                .y      = (float) (object->y + object->height / 2.0f),
+                .width  = (float) (object->width  / 2.0f),
+                .height = (float) (object->height / 2.0f)
+            };
+        } break;
 	    default: return; break;
     }
     wrapper->collision_callback(object, collision, wrapper->userdata);
