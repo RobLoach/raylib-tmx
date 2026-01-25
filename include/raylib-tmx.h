@@ -445,14 +445,13 @@ void DrawTMXObjectTile(tmx_tile* tile, int gid, Rectangle destRect, float rotati
 
     if (gid & ~TMX_FLIP_BITS_REMOVAL) {
 	    if (gid & TMX_FLIPPED_DIAGONALLY) {
-            srcRect.width  = (float) -fabs(srcRect.width);
-            srcRect.height = (float) -fabs(srcRect.height);
-	    } else {
-            if ((unsigned int)gid & TMX_FLIPPED_HORIZONTALLY) {
-		        srcRect.width =  (float) -fabs(srcRect.width);
-	        } else if (gid & TMX_FLIPPED_VERTICALLY) {
-		        srcRect.height = (float) -fabs(srcRect.height);
-	        }
+            // TODO: TMX_FLIPPED_DIAGONALLY
+	    }
+        if (gid & TMX_FLIPPED_HORIZONTALLY) {
+		    srcRect.width =  (float) -fabs(srcRect.width);
+	    }
+        if (gid & TMX_FLIPPED_VERTICALLY) {
+		    srcRect.height = (float) -fabs(srcRect.height);
 	    }
     }
 
