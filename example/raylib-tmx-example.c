@@ -16,6 +16,45 @@
 #define RAYLIB_TMX_IMPLEMENTATION
 #include "raylib-tmx.h"
 
+tmx_object *selected = NULL;
+
+void UpdateCollisons(tmx_object *object, RaylibTMXCollision collision, void* userdata) {
+    tmx_map* map = (tmx_map*)userdata;
+    if (selected == NULL && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        Vector2 mousePosition = GetMousePosition();
+        switch (object->obj_type)
+        {
+            case OT_TILE:
+            case OT_SQUARE:
+            case OT_ELLIPSE: {
+                if (CheckCollisionPointRec(mousePosition, collision.rect)) {
+                    selected = object;
+                }
+            } break;
+            case OT_POINT: {
+                if (CheckCollisionPointCircle(mousePosition, collision.point, 5.0f)) {
+                    selected = object;
+                }
+            } break;
+            case OT_POLYGON: {
+                double** points      = collision.polygon.points;
+                int count            = collision.polygon.count;
+                Vector2* checkPoints = malloc(count * sizeof(Vector2));
+                for (int i = 0; i < count; i++) {
+                    float posX = (float)(object->x + points[i][0]);
+                    float posY = (float)(object->y + points[i][1]);
+                    checkPoints[i] = (Vector2){posX, posY};
+                }
+                if (CheckCollisionPointPoly(mousePosition, checkPoints, count)) {
+                    selected = object;
+                }
+                free(checkPoints);
+            } break;
+	        default: return; break;
+        }
+    }
+}
+
 void DrawCollisons(tmx_object *object, RaylibTMXCollision collision, void* userdata) {
     Vector2* position = (Vector2*)userdata;
     switch (object->obj_type)
@@ -76,19 +115,22 @@ int main(int argc, char *argv[]) {
 
         // Update
         //----------------------------------------------------------------------------------
-        if (IsKeyDown(KEY_LEFT)) {
-            position.x += 2;
+        if (IsKeyDown(KEY_LEFT))  position.x += 2;
+        if (IsKeyDown(KEY_UP))    position.y += 2;
+        if (IsKeyDown(KEY_RIGHT)) position.x -= 2;
+        if (IsKeyDown(KEY_DOWN))  position.y -= 2;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            drawCollisions = !drawCollisions;
         }
-        if (IsKeyDown(KEY_UP)) {
-            position.y += 2;
+        HandleTMXCollisions(map, UpdateCollisons, map);
+        if (selected != NULL) {
+            Vector2 mousePosition = GetMousePosition();
+            selected->x           = mousePosition.x;
+            selected->y           = mousePosition.y;
         }
-        if (IsKeyDown(KEY_RIGHT)) {
-            position.x -= 2;
+        if (selected != NULL && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+            selected = NULL;
         }
-        if (IsKeyDown(KEY_DOWN)) {
-            position.y -= 2;
-        }
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) drawCollisions = !drawCollisions;
         //----------------------------------------------------------------------------------
 
         // Draw
