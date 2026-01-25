@@ -620,7 +620,11 @@ void HandleTMXCollision(tmx_object *object, tmx_collision_functor callback, void
                 .height = (float) (object->height / 2.0f)
             };
         } break;
-	    default: return; break;
+        case OT_NONE:
+        case OT_TEXT: {
+            TraceLog(LOG_ERROR, "Unreachable: OT_TEXT and OT_NONE dont have collisions");
+            abort();
+        } break;
     }
     callback(object, collision, userdata);
 }
@@ -655,6 +659,7 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
             } break;
             case L_OBJGR: {
                 for (tmx_object *object = (layer->content.objgr->head); object != NULL; object = object->next) {
+                    if (object->obj_type == OT_TEXT || object->obj_type == OT_NONE) continue;
                     HandleTMXCollision(object, callback, userdata);
                     if (object->obj_type != OT_TILE) continue;
                     int baseGid = object->content.gid;
