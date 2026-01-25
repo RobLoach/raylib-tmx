@@ -36,6 +36,20 @@ void UpdateCollisons(tmx_object *object, RaylibTMXCollision collision, void* use
                     selected = object;
                 }
             } break;
+            case OT_POLYLINE: {
+                double** points      = collision.polygon.points;
+                int count            = collision.polygon.count;
+                Vector2* checkPoints = malloc(count * sizeof(Vector2));
+                for (int i = 0; i < count; i++) {
+                    float posX = (float)(object->x + points[i][0]);
+                    float posY = (float)(object->y + points[i][1]);
+                    checkPoints[i] = (Vector2){posX, posY};
+                }
+                if (CheckCollisionPointLine(mousePosition,checkPoints[0], checkPoints[1], RAYLIB_TMX_LINE_THICKNESS)) {
+                    selected = object;
+                }
+                free(checkPoints);
+            } break;
             case OT_POLYGON: {
                 double** points      = collision.polygon.points;
                 int count            = collision.polygon.count;
@@ -75,7 +89,13 @@ void DrawCollisons(tmx_object *object, RaylibTMXCollision collision, void* userd
             int centerX = (int)(collision.point.x + object->width / 2.0);
             int centerY = (int)(collision.point.y + object->height / 2.0);
             DrawCircle(centerX, centerY, 5.0f, YELLOW);
-            DrawPixelV(collision.point, PURPLE);
+        } break;
+        case OT_POLYLINE: {
+            double** points = collision.polygon.points;
+            int count       = collision.polygon.count;
+            double offset_x = object->x + position->x;
+            double offset_y = object->y + position->y;
+            DrawTMXPolyline(offset_x, offset_y, points, count, PURPLE);
         } break;
         case OT_POLYGON: {
             double** points = collision.polygon.points;

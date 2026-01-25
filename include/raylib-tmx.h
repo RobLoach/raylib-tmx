@@ -607,6 +607,7 @@ void HandleTMXCollision(tmx_object *object, tmx_collision_functor callback, void
                 .y = (float)object->y
             };
         } break;
+        case OT_POLYLINE:
         case OT_POLYGON: {
             collision.polygon.points = object->content.shape->points;
             collision.polygon.count  = object->content.shape->points_len;
