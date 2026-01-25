@@ -60,8 +60,6 @@ typedef union {
 
 typedef void (*tmx_collision_functor)(tmx_object *object, RaylibTMXCollision collision, void* userdata);
 
-#define tmx_list_foreach(Type, it, list) for (Type *it = (list); it != NULL; it = it->next)
-
 // TMX functions
 tmx_map* LoadTMX(const char* fileName);                                                                // Load a Tiled .tmx tile map
 void UnloadTMX(tmx_map* map);                                                                          // Unload the given Tiled map
@@ -182,7 +180,7 @@ tmx_map* LoadTMX(const char* fileName) {
  */
 void UnloadTMX(tmx_map* map) {
     if (map) {
-	    tmx_list_foreach(tmx_layer, layer, map->ly_head) {
+        for (tmx_layer *layer = (map->ly_head); layer != NULL; layer = layer->next) {
 	        switch (layer->type)
 	        {
 		        default: continue; break;
@@ -625,7 +623,7 @@ void HandleTMXCollision(tmx_object *object, tmx_collision_functor callback, void
  * @param userdata  The userdata that the user wnats to utilize within the callback.
  */
 void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* userdata) {
-    tmx_list_foreach(tmx_layer, layer, map->ly_head) {
+    for (tmx_layer *layer = (map->ly_head); layer != NULL; layer = layer->next) {
         if (!layer->visible) continue;
         switch (layer->type) {
             case L_LAYER: {
@@ -636,8 +634,7 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                         unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
                         tmx_tile* tile = map->tiles[gid];
                         if (!tile || !tile->collision) continue;
-                        
-                        tmx_list_foreach(tmx_object, collision, tile->collision) {
+                        for (tmx_object *collision = (tile->collision); collision != NULL; collision = collision->next) {
                             tmx_object copy = *collision;
                             copy.x += (x * tile->width);
                             copy.y += (y * tile->height);
@@ -647,14 +644,13 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                 }
             } break;
             case L_OBJGR: {
-                tmx_list_foreach(tmx_object, object, layer->content.objgr->head) {
+                for (tmx_object *object = (layer->content.objgr->head); object != NULL; object = object->next) {
                     HandleTMXCollision(object, callback, userdata);
                     if (object->obj_type != OT_TILE) continue;
                     int baseGid = object->content.gid;
                     unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
                     if (!map->tiles[gid]) continue;
-                    
-                    tmx_list_foreach(tmx_object, collision, map->tiles[gid]->collision) {
+                    for (tmx_object *collision = (map->tiles[gid]->collision); collision != NULL; collision = collision->next) {
                         tmx_object copy = *collision;
                         copy.x += object->x;
                         copy.y += object->y - object->height;
