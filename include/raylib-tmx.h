@@ -417,17 +417,30 @@ void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color
         int is_vertically_fliped   = baseGid & TMX_FLIPPED_VERTICALLY;
 	    if (is_diagonally_fliped) {
             if (is_horizontally_fliped && is_vertically_fliped) {
+                srcRect.height = (float) -fabs(srcRect.height);
+                rotation = 270.0f;
             } else if (is_horizontally_fliped) {
+                rotation = 90.0f;
             } else if (is_vertically_fliped) {
+                rotation = 270.0f;
             } else {
+                srcRect.height = (float) -fabs(srcRect.height);
+                rotation = -270.0f;
             }
+            origin.x    = destRect.width  * 0.5f;
+            origin.y    = destRect.height * 0.5f;
+            destRect.x += origin.x;
+            destRect.y += origin.y;
 	    } else {
             if (is_horizontally_fliped) {
+		        srcRect.width =  (float) -fabs(srcRect.width);
 	        }
             if (is_vertically_fliped) {
+		        srcRect.height = (float) -fabs(srcRect.height);
 	        }
         }
     }
+
     // Find the image
     tmx_image *im = tile->image;    
     if (im && im->resource_image) {
