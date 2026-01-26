@@ -67,7 +67,7 @@ Color ColorFromTMX(uint32_t color);                                             
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint);                                            // Render the given Tiled map to the screen
 void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint);                   // Render all the given map layers to the screen
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint);                     // Render a single map layer on the screen
-void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);                                      // Render the given tile to the screen
+void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color tint);                                      // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
 void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile);                                            // Controls the animation state of a tile and return the LID of the current animation
 void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* userdata);               // Returns each tmx_object on a given map and their collisions on a callback
@@ -395,7 +395,7 @@ void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile){
  * @param posY The Y position of the tile.
  * @param tint How to tint the tile when rendering.
  */
-void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
+void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color tint) {
     Texture* image = NULL;
     Rectangle srcRect;
     Vector2 position;
@@ -407,6 +407,24 @@ void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint) {
     srcRect.width  = (float)tile->tileset->tile_width;
     srcRect.height = (float)tile->tileset->tile_height;
 
+    int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
+    if  (flags) {
+        int is_diagonally_fliped   = baseGid & TMX_FLIPPED_DIAGONALLY;
+        int is_horizontally_fliped = baseGid & TMX_FLIPPED_HORIZONTALLY;
+        int is_vertically_fliped   = baseGid & TMX_FLIPPED_VERTICALLY;
+	    if (is_diagonally_fliped) {
+            if (is_horizontally_fliped && is_vertically_fliped) {
+            } else if (is_horizontally_fliped) {
+            } else if (is_vertically_fliped) {
+            } else {
+            }
+	    } else {
+            if (is_horizontally_fliped) {
+	        }
+            if (is_vertically_fliped) {
+	        }
+        }
+    }
     // Find the image
     tmx_image *im = tile->image;    
     if (im && im->resource_image) {
@@ -482,7 +500,7 @@ void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color
             if (tile->animation) UpdateTMXTileAnimation(map, &tile);
 	        int drawX = (int)((unsigned int)posX + x * tile->width);
 	        int drawY = (int)((unsigned int)posY + y * tile->height);
-	        DrawTMXTile(tile, drawX, drawY, newTint);
+	        DrawTMXTile(tile, baseGid, drawX, drawY, newTint);
         }
     }
 }
