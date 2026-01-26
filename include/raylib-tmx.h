@@ -398,14 +398,17 @@ void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile){
 void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color tint) {
     Texture* image = NULL;
     Rectangle srcRect;
-    Vector2 position;
-    position.x = (float)posX;
-    position.y = (float)posY;
+    Vector2 origin = {0};
+    float rotation = 0;
 
     srcRect.x      = (float)tile->ul_x;
     srcRect.y      = (float)tile->ul_y;
     srcRect.width  = (float)tile->tileset->tile_width;
     srcRect.height = (float)tile->tileset->tile_height;
+
+    Rectangle destRect = srcRect;
+    destRect.x = (float)posX;
+    destRect.y = (float)posY;
 
     int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
     if  (flags) {
@@ -435,7 +438,7 @@ void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color
     }
 
     if (image) {
-        DrawTextureRec(*image, srcRect, position, tint);
+        DrawTexturePro(*image, srcRect, destRect, origin, rotation, tint);
     }
 }
 
