@@ -410,11 +410,11 @@ void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color
     destRect.x = (float)posX;
     destRect.y = (float)posY;
 
-    int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
+    int flags = (int)baseGid & ~TMX_FLIP_BITS_REMOVAL;
     if  (flags) {
-        int is_diagonally_fliped   = baseGid & TMX_FLIPPED_DIAGONALLY;
-        int is_horizontally_fliped = baseGid & TMX_FLIPPED_HORIZONTALLY;
-        int is_vertically_fliped   = baseGid & TMX_FLIPPED_VERTICALLY;
+        int is_diagonally_fliped   = (baseGid & TMX_FLIPPED_DIAGONALLY);
+        int is_horizontally_fliped = (int)(baseGid & TMX_FLIPPED_HORIZONTALLY);
+        int is_vertically_fliped   = (baseGid & TMX_FLIPPED_VERTICALLY);
 	    if (is_diagonally_fliped) {
             if (is_horizontally_fliped && is_vertically_fliped) {
                 srcRect.height = (float) -fabs(srcRect.height);
@@ -464,7 +464,7 @@ void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color
  * @param rotation  The rotation of the tile on screen
  * @param tint      How to tint the tile when rendering.
  */
-void DrawTMXObjectTile(tmx_tile* tile, int gid, Rectangle destRect, float rotation, Color tint) {
+void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint) {
     Texture* image = NULL;
     Rectangle srcRect;
     Vector2 origin = {0};
@@ -476,11 +476,14 @@ void DrawTMXObjectTile(tmx_tile* tile, int gid, Rectangle destRect, float rotati
 
     destRect.y     = destRect.y - destRect.height;
 
-    if (gid & ~TMX_FLIP_BITS_REMOVAL) {
-        if (gid & TMX_FLIPPED_HORIZONTALLY) {
+    int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
+    if  (flags) {
+        int is_horizontally_fliped = (int)((unsigned int)baseGid & TMX_FLIPPED_HORIZONTALLY);
+        if (is_horizontally_fliped) {
 		    srcRect.width =  (float) -fabs(srcRect.width);
 	    }
-        if (gid & TMX_FLIPPED_VERTICALLY) {
+        int is_vertically_fliped = baseGid & TMX_FLIPPED_VERTICALLY;
+        if (is_vertically_fliped) {
 		    srcRect.height = (float) -fabs(srcRect.height);
 	    }
     }
@@ -703,14 +706,18 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                         copy.x += object->x;
                         copy.y += object->y - object->height;
                         
-                        if (baseGid & ~TMX_FLIP_BITS_REMOVAL) {
-                            if (baseGid & TMX_FLIPPED_DIAGONALLY) {
+                        int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
+                        if  (flags) {
+                            int is_diagonally_fliped   = baseGid & TMX_FLIPPED_DIAGONALLY;
+                            int is_horizontally_fliped = (int)((unsigned int)baseGid & TMX_FLIPPED_HORIZONTALLY);
+                            int is_vertically_fliped   = baseGid & TMX_FLIPPED_VERTICALLY;
+                            if (is_diagonally_fliped) {
                                 // TODO: TMX_FLIPPED_DIAGONALLY
                             }
-                            if (baseGid & TMX_FLIPPED_HORIZONTALLY) {
+                            if (is_horizontally_fliped) {
                                 copy.x += object->width - collision->width;
                             }
-                            if (baseGid & TMX_FLIPPED_VERTICALLY) {
+                            if (is_vertically_fliped) {
                                 copy.y = object->y - (collision->y + collision->height);
                             }
                         }

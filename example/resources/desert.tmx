@@ -212,6 +212,6 @@
   <object id="20" name="Polyline" type="Polyline" x="209" y="136">
    <polyline points="0,0 1,232"/>
   </object>
-  <object id="21" name="sSing Post 2" gid="3221225518" x="737.333" y="492.667" width="32" height="32" rotation="360"/>
+  <object id="21" name="Sing Post 2" gid="3221225518" x="737.333" y="492.667" width="32" height="32" rotation="360"/>
  </objectgroup>
 </map>
