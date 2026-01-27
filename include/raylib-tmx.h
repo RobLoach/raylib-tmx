@@ -763,7 +763,18 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                         copy.y += object->y;
                         switch (tile->tileset->objectalignment)
                         {
-                            case OA_TOPLEFT:  /*RAYLIB DEFAULT*/  break;
+                            case OA_TOPLEFT: /*RAYLIB DEFAULT*/ {
+                                if (is_horizontally_fliped) {
+                                    int objectXOffset    = object->x + object->width;
+                                    int collisionXOffset = collision->x + collision->width;
+                                    copy.x = objectXOffset - collisionXOffset;
+                                }
+                                if (is_vertically_fliped) {
+                                    int objectYOffset    = object->y + object->height;
+                                    int collisionYOffset = collision->y + collision->height;
+                                    copy.y = objectYOffset - collisionYOffset;
+                                }
+                            } break;
                             case OA_NONE:
                             case OA_BOTTOMLEFT: { /* TILED DEFAULT */
                                 if (is_horizontally_fliped) {
