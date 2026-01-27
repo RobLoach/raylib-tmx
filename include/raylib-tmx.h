@@ -305,13 +305,13 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
                 case OT_POLYLINE:
                     DrawTMXPolyline(dest.x, dest.y, head->content.shape->points, head->content.shape->points_len, color);
                     break;
-                case OT_ELLIPSE:
-                    DrawEllipseLines((int)(dest.x + head->width  / 2.0),
-		                             (int)(dest.y + head->height / 2.0),
-		                             (float)head->width / 2.0f,
-		                             (float)head->height / 2.0f,
-		                             color);
-                    break;
+                case OT_ELLIPSE: {
+                    int centerX   = (int)(dest.x + head->width  / 2.0);
+                    int centerY   = (int)(dest.y + head->height / 2.0);
+                    float radiusH = (float)head->width / 2.0f;
+                    float radiusV = (float)head->height / 2.0f;
+                    DrawEllipseLines(centerX, centerY, radiusH, radiusV, color);
+                } break;
 		        case OT_TILE: {
 		            int baseGid = head->content.gid;
                     int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
@@ -327,13 +327,12 @@ void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int po
                     textColor.a = tint.a;
                     DrawTMXText(text, dest, textColor);
                 } break;
-            case OT_POINT:
-                DrawCircle((int)(dest.x + head->width  / 2.0),
-		        (int)(dest.y + head->height / 2.0),
-		        5.0f, color);
-                break;
-		    case OT_NONE:
-		        break;
+                case OT_POINT: {
+                    int centerX = (int)(dest.x + head->width  / 2.0);
+                    int centerY = (int)(dest.y + head->height / 2.0);
+                    DrawCircle(centerX, centerY, 5.0f, color);
+                } break;
+		        case OT_NONE: break;
             }
 		}
 		head = head->next;
@@ -467,21 +466,20 @@ void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color
  */
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint) {
     Texture* image = NULL;
-    Rectangle srcRect;
     Vector2 origin = {0};
-
-    srcRect.x      = (float)tile->ul_x;
-    srcRect.y      = (float)tile->ul_y;
-    srcRect.width  = (float)tile->width;
-    srcRect.height = (float)tile->height;
-
     destRect.y     = destRect.y - destRect.height;
+    Rectangle srcRect = (Rectangle) {
+        .x      = (float)tile->ul_x,
+        .y      = (float)tile->ul_y,
+        .width  = (float)tile->width,
+        .height = (float)tile->height
+    };
 
     int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
     if  (flags) {
         int is_horizontally_fliped = (int)((unsigned int)baseGid & TMX_FLIPPED_HORIZONTALLY);
         if (is_horizontally_fliped) {
-		    srcRect.width =  (float) -fabs(srcRect.width);
+		    srcRect.width = (float) -fabs(srcRect.width);
 	    }
         int is_vertically_fliped = baseGid & TMX_FLIPPED_VERTICALLY;
         if (is_vertically_fliped) {
@@ -589,12 +587,9 @@ void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint
  * @param tint How to tint the rendering of the layer.
  */
 void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint) {
-	while (layers) {
-		if (layers->visible) {
-            DrawTMXLayer(map, layers, posX, posY, tint);
-		}
-		layers = layers->next;
-	}
+    do {
+		if (layers->visible) DrawTMXLayer(map, layers, posX, posY, tint);
+	} while ((layers = layers->next));
 }
 
 /**
@@ -651,10 +646,10 @@ RaylibTMXCollision HandleTMXCollision(tmx_object* object) {
         } break;
         case OT_ELLIPSE: {
             collision.rect = (Rectangle) {
-                .x      = (float) (object->x + object->width  / 2.0f),
-                .y      = (float) (object->y + object->height / 2.0f),
-                .width  = (float) (object->width  / 2.0f),
-                .height = (float) (object->height / 2.0f)
+                .x         = (float) (object->x + object->width  / 2.0f),
+                .y         = (float) (object->y + object->height / 2.0f),
+                .width     = (float) (object->width  / 2.0f),
+                .height    = (float) (object->height / 2.0f)
             };
         } break;
         case OT_NONE:
@@ -682,10 +677,10 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
             case L_LAYER: {
                 for (unsigned int y = 0; y < map->height; y++) {
                     for (unsigned int x = 0; x < map->width; x++) {
-                        unsigned int index = (y * map->width) + x;
+                        unsigned int index   = (y * map->width) + x;
                         unsigned int baseGid = layer->content.gids[index];
-                        unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
-                        tmx_tile* tile = map->tiles[gid];
+                        unsigned int gid     = baseGid & TMX_FLIP_BITS_REMOVAL;
+                        tmx_tile* tile       = map->tiles[gid];
                         if (!tile || !tile->collision) continue;
                         tmx_object *collision = tile->collision;
                         do {
