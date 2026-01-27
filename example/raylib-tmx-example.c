@@ -16,12 +16,12 @@
 #define RAYLIB_TMX_IMPLEMENTATION
 #include "raylib-tmx.h"
 
+Vector2 mousePosition = {0};
 tmx_object *selected = NULL;
 
 void UpdateCollisons(tmx_object *object, RaylibTMXCollision collision, void* userdata) {
     tmx_map* map = (tmx_map*)userdata;
     if (selected == NULL && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        Vector2 mousePosition = GetMousePosition();
         switch (object->obj_type)
         {
             case OT_TILE:
@@ -135,6 +135,9 @@ int main(int argc, char *argv[]) {
 
         // Update
         //----------------------------------------------------------------------------------
+        mousePosition = GetMousePosition();
+        mousePosition.x -= position.x;
+        mousePosition.y -= position.y;
         if (IsKeyDown(KEY_LEFT))  position.x += 2;
         if (IsKeyDown(KEY_UP))    position.y += 2;
         if (IsKeyDown(KEY_RIGHT)) position.x -= 2;
@@ -144,7 +147,6 @@ int main(int argc, char *argv[]) {
         }
         CollisionsTMXForeach(map, UpdateCollisons, map);
         if (selected != NULL) {
-            Vector2 mousePosition = GetMousePosition();
             selected->x           = mousePosition.x;
             selected->y           = mousePosition.y;
         }
