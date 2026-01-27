@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
         if (IsKeyDown(KEY_UP))    position.y += 2;
         if (IsKeyDown(KEY_RIGHT)) position.x -= 2;
         if (IsKeyDown(KEY_DOWN))  position.y -= 2;
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE)) {
             drawCollisions = !drawCollisions;
         }
         CollisionsTMXForeach(map, UpdateCollisons, map);
@@ -161,6 +161,10 @@ int main(int argc, char *argv[]) {
             DrawTMX(map, position.x, position.y, WHITE);
             if (drawCollisions) CollisionsTMXForeach(map, DrawCollisons, &position);
             DrawFPS(10, 10);
+            DrawText("Move arround with arrow keys. ", 10, 40, 20, DARKGRAY);
+            DrawText("Select an collision and its object with left click and move it arround with mouse position.", 10, 60, 20, DARKGRAY);
+            DrawText("Unselect with right click and leave it in the current mouse position. ", 10, 80, 20, DARKGRAY);
+            DrawText("Click middle mouse to toggle collisions drawing. ", 10, 100, 20, DARKGRAY);
         }
         EndDrawing();
         //----------------------------------------------------------------------------------
