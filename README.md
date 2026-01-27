@@ -56,6 +56,20 @@ Color ColorFromTMX(uint32_t color);
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint);
 void DrawTMXLayer(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint);
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);
+void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);
+
+typedef union {
+    Rectangle rect;
+    Vector2   point;
+    struct {
+        double** points;
+        int count;
+    } polygon;
+} RaylibTMXCollision;
+
+typedef void (*tmx_collision_functor)(tmx_object *object, RaylibTMXCollision collision, void* userdata);
+void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* userdata);
+RaylibTMXCollision HandleTMXCollision(tmx_object* object);
 ```
 
 Refer to the [libTMX documentation](http://libtmx.rtfd.io/) to see how to use the `tmx_map*` map object beyond rendering.
