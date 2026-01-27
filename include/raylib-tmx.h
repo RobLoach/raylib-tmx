@@ -467,13 +467,28 @@ void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint) {
     Texture* image = NULL;
     Vector2 origin = {0};
-    destRect.y     = destRect.y - destRect.height;
     Rectangle srcRect = (Rectangle) {
         .x      = (float)tile->ul_x,
         .y      = (float)tile->ul_y,
         .width  = (float)tile->width,
         .height = (float)tile->height
     };
+
+    switch (tile->tileset->objectalignment)
+    {
+        case OA_TOPLEFT: /*RAYLIB DEFAULT*/ break;
+        case OA_NONE:
+        case OA_BOTTOMLEFT: { /* TILED DEFAULT */
+            destRect.y -= destRect.height;
+        } break;
+        case OA_TOP:         /* TODO */ break;
+        case OA_LEFT:        /* TODO */ break;
+        case OA_BOTTOM:      /* TODO */ break;
+        case OA_RIGHT:       /* TODO */ break;
+        case OA_TOPRIGHT:    /* TODO */ break;
+        case OA_BOTTOMRIGHT: /* TODO */ break;
+        case OA_CENTER:      /* TODO */ break;
+    }
 
     int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
     if  (flags) {
