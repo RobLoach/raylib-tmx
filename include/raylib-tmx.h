@@ -54,6 +54,7 @@ typedef struct {
         COLLISION_RECT,
         COLLISION_POINT,
         COLLISION_POLYGON,
+        COLLISION_POLYLINE,
         COLLISION_ELLIPSE
     } type;
     union {
@@ -660,7 +661,7 @@ RaylibTMXCollision HandleTMXCollision(tmx_object* object) {
         } break;
         case OT_POLYLINE:
         case OT_POLYGON: {
-            collision.type  = COLLISION_POLYGON;
+            collision.type = (object->obj_type == OT_POLYGON) ? COLLISION_POLYGON : COLLISION_POLYLINE;
             collision.polygon.points = object->content.shape->points;
             collision.polygon.count  = object->content.shape->points_len;
         } break;
