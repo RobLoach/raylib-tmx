@@ -616,44 +616,44 @@ void DrawTMX(tmx_map *map, int posX, int posY, Color tint) {
  *
  * Returns an RaylibTMXCollision shape relative to object type
  */
-RaylibTMXCollision HandleTMXCollision(tmx_object object) {
+RaylibTMXCollision HandleTMXCollision(tmx_object* object) {
     RaylibTMXCollision collision = {0};
-    switch (object.obj_type)
+    switch (object->obj_type)
     {
 	    case OT_SQUARE: {
 	        collision.rect = (Rectangle) {
-                .x      = (float) object.x,
-                .y      = (float) object.y,
-                .width  = (float) object.width,
-                .height = (float) object.height
+                .x      = (float) object->x,
+                .y      = (float) object->y,
+                .width  = (float) object->width,
+                .height = (float) object->height
             };
 	    } break;
 	    case OT_TILE: {
             collision.rect = (Rectangle) {
-                .x      = (float) object.x,
-                .y      = (float) object.y,
-                .width  = (float) object.width,
-                .height = (float) object.height
+                .x      = (float) object->x,
+                .y      = (float) object->y,
+                .width  = (float) object->width,
+                .height = (float) object->height
             };
-            collision.rect.y -= (float) object.height;
+            collision.rect.y -= (float) object->height;
 	    } break;
         case OT_POINT: {
             collision.point = (Vector2) {
-                .x = (float)object.x,
-                .y = (float)object.y
+                .x = (float)object->x,
+                .y = (float)object->y
             };
         } break;
         case OT_POLYLINE:
         case OT_POLYGON: {
-            collision.polygon.points = object.content.shape->points;
-            collision.polygon.count  = object.content.shape->points_len;
+            collision.polygon.points = object->content.shape->points;
+            collision.polygon.count  = object->content.shape->points_len;
         } break;
         case OT_ELLIPSE: {
             collision.rect = (Rectangle) {
-                .x      = (float) (object.x + object.width  / 2.0f),
-                .y      = (float) (object.y + object.height / 2.0f),
-                .width  = (float) (object.width  / 2.0f),
-                .height = (float) (object.height / 2.0f)
+                .x      = (float) (object->x + object->width  / 2.0f),
+                .y      = (float) (object->y + object->height / 2.0f),
+                .width  = (float) (object->width  / 2.0f),
+                .height = (float) (object->height / 2.0f)
             };
         } break;
         case OT_NONE:
@@ -691,7 +691,7 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                             tmx_object copy = *collision;
                             copy.x += (x * tile->width);
                             copy.y += (y * tile->height);
-                            callback(collision, HandleTMXCollision(copy), userdata);
+                            callback(collision, HandleTMXCollision(&copy), userdata);
                         } while ((collision = collision->next));
                     }
                 }
@@ -701,7 +701,7 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                 if (!object) continue;
                 do {
                     if (object->obj_type == OT_TEXT || object->obj_type == OT_NONE) continue;
-                    callback(object, HandleTMXCollision(*object), userdata);
+                    callback(object, HandleTMXCollision(object), userdata);
                     if (object->obj_type != OT_TILE) continue;
                     int baseGid = object->content.gid;
                     unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
@@ -726,7 +726,7 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                                 copy.y = object->y - (collision->y + collision->height);
                             }
                         }
-                        callback(collision, HandleTMXCollision(copy), userdata);
+                        callback(collision, HandleTMXCollision(&copy), userdata);
                     } while ((collision = collision->next));
                 } while ((object = object->next));
             } break;
