@@ -776,12 +776,12 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                                 }
                             } break;
                             case OA_NONE:
-                            case OA_BOTTOMLEFT: { /* TILED DEFAULT */
+                            case OA_BOTTOMLEFT: /* TILED DEFAULT */ {
                                 if (is_horizontally_fliped) {
                                     copy.x += object->width - collision->width;
                                 }
                                 if (is_vertically_fliped) {
-                                    copy.y = object->y - (collision->y + collision->height);
+                                    copy.y += object->height - collision->height;
                                 }
                             } break;
                             case OA_TOP:         /* TODO */ break;
