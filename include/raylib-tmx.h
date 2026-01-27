@@ -67,10 +67,11 @@ Color ColorFromTMX(uint32_t color);                                             
 void DrawTMX(tmx_map *map, int posX, int posY, Color tint);                                            // Render the given Tiled map to the screen
 void DrawTMXLayers(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tint);                   // Render all the given map layers to the screen
 void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint);                     // Render a single map layer on the screen
-void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color tint);                                      // Render the given tile to the screen
+void DrawTMXTile(tmx_tile* tile, unsigned int baseGid, int posX, int posY, Color tint);                // Render the given tile to the screen
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);   // Render the tile of a given object to the screen
 void UpdateTMXTileAnimation(tmx_map* map, tmx_tile** tile);                                            // Controls the animation state of a tile and return the LID of the current animation
 void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* userdata);               // Returns each tmx_object on a given map and their collisions on a callback
+RaylibTMXCollision HandleTMXCollision(tmx_object* object);                                              // Returns a single RaylibTMXCollision for an given object pointer
 
 #ifdef __cplusplus
 }
@@ -612,9 +613,9 @@ void DrawTMX(tmx_map *map, int posX, int posY, Color tint) {
 }
 
 /**
-* @internal
- *
  * Returns an RaylibTMXCollision shape relative to object type
+ *
+ * @param object  The object pointer which the collision will be returned.
  */
 RaylibTMXCollision HandleTMXCollision(tmx_object* object) {
     RaylibTMXCollision collision = {0};
