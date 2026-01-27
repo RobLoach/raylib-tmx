@@ -22,96 +22,83 @@ tmx_object *selected = NULL;
 void UpdateCollisons(tmx_object *object, RaylibTMXCollision collision, void* userdata) {
     tmx_map* map = (tmx_map*)userdata;
     if (selected == NULL && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        switch (object->obj_type)
+        switch (collision.type)
         {
-            case OT_TILE:
-            case OT_SQUARE:
-            case OT_ELLIPSE: {
+            case COLLISION_RECT:
+            case COLLISION_ELLIPSE: {
                 if (CheckCollisionPointRec(mousePosition, collision.rect)) {
                     selected = object;
                 }
             } break;
-            case OT_POINT: {
+            case COLLISION_POINT: {
                 if (CheckCollisionPointCircle(mousePosition, collision.point, 5.0f)) {
                     selected = object;
                 }
             } break;
-            case OT_POLYLINE: {
-                double** points      = collision.polygon.points;
-                int count            = collision.polygon.count;
-                Vector2* checkPoints = malloc(count * sizeof(Vector2));
+            case COLLISION_POLYGON:
+            case COLLISION_POLYLINE: {
+                double** points = collision.polygon.points;
+                int count       = collision.polygon.count;
+                Vector2* check  = malloc(count * sizeof(Vector2));
+                int threshold   = RAYLIB_TMX_LINE_THICKNESS;
                 for (int i = 0; i < count; i++) {
                     float posX = (float)(object->x + points[i][0]);
                     float posY = (float)(object->y + points[i][1]);
-                    checkPoints[i] = (Vector2){posX, posY};
+                    check[i] = (Vector2){posX, posY};
                 }
-                if (CheckCollisionPointLine(mousePosition,checkPoints[0], checkPoints[1], RAYLIB_TMX_LINE_THICKNESS)) {
-                    selected = object;
+                if (object->obj_type == OT_POLYGON) {
+                    if (CheckCollisionPointPoly(mousePosition, check, count)) {
+                        selected = object;
+                    }
                 }
-                free(checkPoints);
+                if (object->obj_type == OT_POLYLINE) {
+                    if (CheckCollisionPointLine(mousePosition, check[0], check[1], threshold)) {
+                        selected = object;
+                    }
+                }
+                free(check);
             } break;
-            case OT_POLYGON: {
-                double** points      = collision.polygon.points;
-                int count            = collision.polygon.count;
-                Vector2* checkPoints = malloc(count * sizeof(Vector2));
-                for (int i = 0; i < count; i++) {
-                    float posX = (float)(object->x + points[i][0]);
-                    float posY = (float)(object->y + points[i][1]);
-                    checkPoints[i] = (Vector2){posX, posY};
-                }
-                if (CheckCollisionPointPoly(mousePosition, checkPoints, count)) {
-                    selected = object;
-                }
-                free(checkPoints);
-            } break;
-	        default: return; break;
         }
     }
 }
 
 void DrawCollisons(tmx_object *object, RaylibTMXCollision collision, void* userdata) {
     Vector2* position = (Vector2*)userdata;
-    switch (object->obj_type)
+    switch (collision.type)
     {
-	    case OT_SQUARE: {
+        case COLLISION_RECT: {
+            Color color = object->obj_type == OT_TILE ? RED : BLUE;
             collision.rect.x += position->x;
             collision.rect.y += position->y;
-            DrawRectangleRec(collision.rect, BLUE);
+            DrawRectangleRec(collision.rect, color);
         } break;
-	    case OT_TILE: {
-            collision.rect.x += position->x;
-            collision.rect.y += position->y;
-            DrawRectangleRec(collision.rect, RED);
-        } break;
-        case OT_POINT: {
+        case COLLISION_POINT: {
             collision.point.x += position->x;
             collision.point.y += position->y;
             int centerX = (int)(collision.point.x + object->width / 2.0);
             int centerY = (int)(collision.point.y + object->height / 2.0);
             DrawCircle(centerX, centerY, 5.0f, YELLOW);
         } break;
-        case OT_POLYLINE: {
+        case COLLISION_POLYGON:
+        case COLLISION_POLYLINE: {
             double** points = collision.polygon.points;
             int count       = collision.polygon.count;
             double offset_x = object->x + position->x;
             double offset_y = object->y + position->y;
-            DrawTMXPolyline(offset_x, offset_y, points, count, PURPLE);
+            if (object->obj_type == OT_POLYGON) {
+                DrawTMXPolygon(offset_x, offset_y, points, count, ORANGE);
+            }
+            if (object->obj_type == OT_POLYLINE) {
+                DrawTMXPolyline(offset_x, offset_y, points, count, PURPLE);
+            }
         } break;
-        case OT_POLYGON: {
-            double** points = collision.polygon.points;
-            int count       = collision.polygon.count;
-            double offset_x = object->x + position->x;
-            double offset_y = object->y + position->y;
-            DrawTMXPolygon(offset_x, offset_y, points, count, ORANGE);
-        } break;
-        case OT_ELLIPSE: {
+        case COLLISION_ELLIPSE: {
             int centerX   = (int)(collision.rect.x + position->x);
             int centerY   = (int)(collision.rect.y + position->y);
             float radiusH = (float)(collision.rect.width);
             float radiusV = (float)(collision.rect.height);
             DrawEllipseLines(centerX, centerY, radiusH, radiusV, GREEN);
         } break;
-	    default: return; break;
     }
 }
 
