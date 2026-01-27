@@ -741,16 +741,16 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                     int baseGid      = object->content.gid;
                     unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
                     tmx_tile* tile   = map->tiles[gid];
+                    if (!tile) {
+                        callback(object, raylibCollision, userdata);
+                        continue;
+                    }
                     int flags                  = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                     int is_diagonally_fliped   = baseGid & TMX_FLIPPED_DIAGONALLY;
                     int is_vertically_fliped   = baseGid & TMX_FLIPPED_VERTICALLY;
                     int is_horizontally_fliped = {
                         (int)((unsigned int)baseGid & TMX_FLIPPED_HORIZONTALLY)
                     };
-                    if (!tile) {
-                        callback(object, raylibCollision, userdata);
-                        continue;
-                    }
                     switch (tile->tileset->objectalignment)
                     {
                         // TODO: Rotated collisions shall be handled here
