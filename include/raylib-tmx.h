@@ -49,13 +49,21 @@ typedef struct AnimationState {
     float frameCounter;
 } AnimationState;
 
-typedef union {
-    Rectangle rect;
-    Vector2   point;
-    struct {
-        double** points;
-        int count;
-    } polygon;
+typedef struct {
+    enum {
+        COLLISION_RECT,
+        COLLISION_POINT,
+        COLLISION_POLYGON,
+        COLLISION_ELLIPSE
+    } type;
+    union {
+        Rectangle rect;
+        Vector2   point;
+        struct {
+            double** points;
+            int count;
+        } polygon;
+    };
 } RaylibTMXCollision;
 
 typedef void (*tmx_collision_functor)(tmx_object *object, RaylibTMXCollision collision, void* userdata);
@@ -633,6 +641,7 @@ RaylibTMXCollision HandleTMXCollision(tmx_object* object) {
     {
 	    case OT_SQUARE:
 	    case OT_TILE: {
+            collision.type = COLLISION_RECT;
             collision.rect = (Rectangle) {
                 .x      = (float) object->x,
                 .y      = (float) object->y,
@@ -641,6 +650,7 @@ RaylibTMXCollision HandleTMXCollision(tmx_object* object) {
             };
 	    } break;
         case OT_POINT: {
+            collision.type  = COLLISION_POINT;
             collision.point = (Vector2) {
                 .x = (float)object->x,
                 .y = (float)object->y
@@ -648,10 +658,12 @@ RaylibTMXCollision HandleTMXCollision(tmx_object* object) {
         } break;
         case OT_POLYLINE:
         case OT_POLYGON: {
+            collision.type  = COLLISION_POLYGON;
             collision.polygon.points = object->content.shape->points;
             collision.polygon.count  = object->content.shape->points_len;
         } break;
         case OT_ELLIPSE: {
+            collision.type = COLLISION_ELLIPSE;
             collision.rect = (Rectangle) {
                 .x         = (float) (object->x + object->width  / 2.0f),
                 .y         = (float) (object->y + object->height / 2.0f),
