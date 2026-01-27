@@ -504,50 +504,53 @@ void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float ro
 /**
  * @internal
  */
-void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint)
-{
-    Color newTint = ColorAlpha(tint, (float)layer->opacity);
-    for (unsigned int y = 0; y < map->height; y++) {
-        for (unsigned int x = 0; x < map->width; x++) {
-	        unsigned int cellIndex = (y * map->width) + x;
-            unsigned int baseGid = layer->content.gids[cellIndex];
-            unsigned int gid = (baseGid) & TMX_FLIP_BITS_REMOVAL;
-            if (!map->tiles[gid]) continue;
-	        tmx_tile* tile = map->tiles[gid];
-            if (tile->animation) UpdateTMXTileAnimation(map, &tile);
-	        int drawX = (int)((unsigned int)posX + x * tile->width);
-	        int drawY = (int)((unsigned int)posY + y * tile->height);
-	        DrawTMXTile(tile, baseGid, drawX, drawY, newTint);
-        }
-    }
-}
+void DrawTMXLayerTiles(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint) {
+    int startX = 0, startY = 0;
+    int endX = (int)map->width, endY = (int)map->height;
+    int incX = 1, incY = 1;
 
-/**
- * @internal
- */
-void HandleTMXLayerRenderOrder(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint) {
     switch (map->renderorder)
     {
-	    case R_NONE: {} break;
-        case R_RIGHTDOWN: {} break;
         case R_RIGHTUP: {
-            // Reverse Y axis
-	        posY = posY - (int)((map->height - 1) * map->tile_height);
-            break;
-	    }
+            startY = (int)map->height - 1;
+            endY = -1;
+            incY = -1;
+        } break;
         case R_LEFTDOWN: {
-            // Reverse X axis
-	        posX = posX - (int)((map->width - 1) * map->tile_width);
-            break;
-	    }
+            startX = (int)map->width - 1;
+            endX = -1;
+            incX = -1;
+        }  break;
         case R_LEFTUP: {
-            // Reverse both axes
-	        posX = posX - (int)((map->width - 1) * map->tile_width);
-	        posY = posY - (int)((map->height - 1) * map->tile_height);
-            break;
-	    }
+            startX = (int)map->width - 1;
+            startY = (int)map->height - 1;
+            endX = -1;
+            endY = -1;
+            incX = -1;
+            incY = -1;
+        } break;
+        case R_RIGHTDOWN:
+        case R_NONE: break;
     }
-    DrawTMXLayerTiles(map, layer, posX, posY, tint);
+
+    Color newTint = ColorAlpha(tint, (float)layer->opacity);
+
+    for (int y = startY; y != endY; y += incY) {
+        for (int x = startX; x != endX; x += incX) {
+            int cellIndex = (y * (int) map->width) + x;
+            unsigned int baseGid = layer->content.gids[cellIndex];
+            unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
+
+            if (!map->tiles[gid]) continue;
+
+            tmx_tile* tile = map->tiles[gid];
+            if (tile->animation) UpdateTMXTileAnimation(map, &tile);
+
+            int drawX = posX + x * (int) map->tile_width;
+            int drawY = posY + y * (int) map->tile_height;
+            DrawTMXTile(tile, baseGid, drawX, drawY, newTint);
+        }
+    }
 }
 
 /**
@@ -571,7 +574,7 @@ void DrawTMXLayer(tmx_map *map, tmx_layer *layer, int posX, int posY, Color tint
             DrawTMXLayerImage(layer->content.image, posX + layer->offsetx, posY + layer->offsety, tint);
             break;
         case L_LAYER:
-	        HandleTMXLayerRenderOrder(map, layer, posX + layer->offsetx, posY + layer->offsety, tint);
+	        DrawTMXLayerTiles(map, layer, posX + layer->offsetx, posY + layer->offsety, tint);
             break;
         case L_NONE:
             // Nothing.
