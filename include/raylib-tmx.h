@@ -631,14 +631,7 @@ RaylibTMXCollision HandleTMXCollision(tmx_object* object) {
     RaylibTMXCollision collision = {0};
     switch (object->obj_type)
     {
-	    case OT_SQUARE: {
-	        collision.rect = (Rectangle) {
-                .x      = (float) object->x,
-                .y      = (float) object->y,
-                .width  = (float) object->width,
-                .height = (float) object->height
-            };
-	    } break;
+	    case OT_SQUARE:
 	    case OT_TILE: {
             collision.rect = (Rectangle) {
                 .x      = (float) object->x,
@@ -646,7 +639,6 @@ RaylibTMXCollision HandleTMXCollision(tmx_object* object) {
                 .width  = (float) object->width,
                 .height = (float) object->height
             };
-            collision.rect.y -= (float) object->height;
 	    } break;
         case OT_POINT: {
             collision.point = (Vector2) {
@@ -712,31 +704,41 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                 if (!object) continue;
                 do {
                     if (object->obj_type == OT_TEXT || object->obj_type == OT_NONE) continue;
-                    callback(object, HandleTMXCollision(object), userdata);
-                    if (object->obj_type != OT_TILE) continue;
-                    int baseGid = object->content.gid;
+                    RaylibTMXCollision raylibCollision = HandleTMXCollision(object);
+                    if (object->obj_type != OT_TILE) {
+                        callback(object, raylibCollision, userdata);
+                        continue;
+                    }
+                    int baseGid      = object->content.gid;
                     unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
-                    if (!map->tiles[gid] || !map->tiles[gid]->collision) continue;
-                    tmx_object *collision = map->tiles[gid]->collision;
+                    tmx_tile* tile   = map->tiles[gid];
+                    if (!tile) {
+                        callback(object, raylibCollision, userdata);
+                        continue;
+                    }
+                    switch (tile->tileset->objectalignment)
+                    {
+                        case OA_TOPLEFT: /*RAYLIB DEFAULT*/ break;
+                        case OA_NONE:
+                        case OA_BOTTOMLEFT: { /* TILED DEFAULT */
+                            raylibCollision.rect.y -= (float) object->height;
+                        } break;
+                        case OA_TOP:         /* TODO */ break;
+                        case OA_LEFT:        /* TODO */ break;
+                        case OA_BOTTOM:      /* TODO */ break;
+                        case OA_RIGHT:       /* TODO */ break;
+                        case OA_TOPRIGHT:    /* TODO */ break;
+                        case OA_BOTTOMRIGHT: /* TODO */ break;
+                        case OA_CENTER:      /* TODO */ break;
+                    }
+                    callback(object, raylibCollision, userdata);
+
+                    tmx_object *collision = tile->collision;
+                    if (!collision) continue;
                     do {
                         tmx_object copy = *collision;
                         copy.x += object->x;
-                        copy.y += object->y - object->height;
-                        int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
-                        if  (flags) {
-                            int is_diagonally_fliped   = baseGid & TMX_FLIPPED_DIAGONALLY;
-                            int is_horizontally_fliped = (int)((unsigned int)baseGid & TMX_FLIPPED_HORIZONTALLY);
-                            int is_vertically_fliped   = baseGid & TMX_FLIPPED_VERTICALLY;
-                            if (is_diagonally_fliped) {
-                                // TODO: TMX_FLIPPED_DIAGONALLY
-                            }
-                            if (is_horizontally_fliped) {
-                                copy.x += object->width - collision->width;
-                            }
-                            if (is_vertically_fliped) {
-                                copy.y = object->y - (collision->y + collision->height);
-                            }
-                        }
+                        copy.y += object->y;
                         callback(collision, HandleTMXCollision(&copy), userdata);
                     } while ((collision = collision->next));
                 } while ((object = object->next));
