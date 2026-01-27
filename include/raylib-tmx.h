@@ -733,7 +733,9 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                         case OA_TOPLEFT: /*RAYLIB DEFAULT*/ break;
                         case OA_NONE:
                         case OA_BOTTOMLEFT: { /* TILED DEFAULT */
-                            raylibCollision.rect.y -= (float) object->height;
+                            if (raylibCollision.type == COLLISION_RECT) {
+                                raylibCollision.rect.y -= (float) object->height;
+                            }
                         } break;
                         case OA_TOP:         /* TODO */ break;
                         case OA_LEFT:        /* TODO */ break;
