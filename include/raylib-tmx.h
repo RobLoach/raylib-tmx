@@ -673,9 +673,11 @@ RaylibTMXCollision HandleTMXCollision(tmx_object object) {
  * @param userdata  The userdata that the user wnats to utilize within the callback.
  */
 void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* userdata) {
-    for (tmx_layer *layer = (map->ly_head); layer != NULL; layer = layer->next) {
+    tmx_layer *layer = map->ly_head;
+    do {
         if (!layer->visible) continue;
-        switch (layer->type) {
+        switch (layer->type)
+        {
             case L_LAYER: {
                 for (unsigned int y = 0; y < map->height; y++) {
                     for (unsigned int x = 0; x < map->width; x++) {
@@ -684,28 +686,31 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                         unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
                         tmx_tile* tile = map->tiles[gid];
                         if (!tile || !tile->collision) continue;
-                        for (tmx_object *collision = (tile->collision); collision != NULL; collision = collision->next) {
+                        tmx_object *collision = tile->collision;
+                        do {
                             tmx_object copy = *collision;
                             copy.x += (x * tile->width);
                             copy.y += (y * tile->height);
                             callback(collision, HandleTMXCollision(copy), userdata);
-                        }
+                        } while ((collision = collision->next));
                     }
                 }
             } break;
             case L_OBJGR: {
-                for (tmx_object *object = (layer->content.objgr->head); object != NULL; object = object->next) {
+                tmx_object *object = layer->content.objgr->head;
+                if (!object) continue;
+                do {
                     if (object->obj_type == OT_TEXT || object->obj_type == OT_NONE) continue;
                     callback(object, HandleTMXCollision(*object), userdata);
                     if (object->obj_type != OT_TILE) continue;
                     int baseGid = object->content.gid;
                     unsigned int gid = baseGid & TMX_FLIP_BITS_REMOVAL;
-                    if (!map->tiles[gid]) continue;
-                    for (tmx_object *collision = (map->tiles[gid]->collision); collision != NULL; collision = collision->next) {
+                    if (!map->tiles[gid] || !map->tiles[gid]->collision) continue;
+                    tmx_object *collision = map->tiles[gid]->collision;
+                    do {
                         tmx_object copy = *collision;
                         copy.x += object->x;
                         copy.y += object->y - object->height;
-                        
                         int flags = baseGid & ~TMX_FLIP_BITS_REMOVAL;
                         if  (flags) {
                             int is_diagonally_fliped   = baseGid & TMX_FLIPPED_DIAGONALLY;
@@ -722,13 +727,13 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                             }
                         }
                         callback(collision, HandleTMXCollision(copy), userdata);
-                    }
-                }
+                    } while ((collision = collision->next));
+                } while ((object = object->next));
             } break;
             
             default: continue;
         }
-    }
+    } while ((layer = layer->next));
 }
 
 #ifdef __cplusplus
