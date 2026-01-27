@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.6" orientation="orthogonal" renderorder="right-down" width="40" height="22" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="21">
+<map version="1.8" tiledversion="1.8.6" orientation="orthogonal" renderorder="right-down" width="40" height="22" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="22">
  <editorsettings>
   <export target="desert.json" format="json"/>
  </editorsettings>
@@ -144,7 +144,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,39,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,48,0,0,0,
 0,0,0,0,0,0,0,1610612775,0,2684354599,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,48,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,47,0,0,3221225511,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483694,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,47,0,0,3221225511,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,31,0,0,0,0,0,48,0,0,0,0,0,47,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,40,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31,0,0,0,0,0,0,0,48,0,0,
@@ -212,5 +212,6 @@
   <object id="20" name="Polyline" type="Polyline" x="209" y="136">
    <polyline points="0,0 1,232"/>
   </object>
+  <object id="21" name="sSing Post 2" gid="3221225518" x="737.333" y="492.667" width="32" height="32" rotation="360"/>
  </objectgroup>
 </map>

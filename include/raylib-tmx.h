@@ -477,9 +477,6 @@ void DrawTMXObjectTile(tmx_tile* tile, int gid, Rectangle destRect, float rotati
     destRect.y     = destRect.y - destRect.height;
 
     if (gid & ~TMX_FLIP_BITS_REMOVAL) {
-	    if (gid & TMX_FLIPPED_DIAGONALLY) {
-            // TODO: TMX_FLIPPED_DIAGONALLY
-	    }
         if (gid & TMX_FLIPPED_HORIZONTALLY) {
 		    srcRect.width =  (float) -fabs(srcRect.width);
 	    }
