@@ -709,6 +709,20 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                             tmx_object copy = *collision;
                             copy.x += (x * tile->width);
                             copy.y += (y * tile->height);
+                            switch (tile->tileset->objectalignment)
+                            {
+                                // TODO: Rotated collisions shall be handle here
+                                case OA_TOPLEFT: /*RAYLIB DEFAULT */ /*TODO*/ break;
+                                case OA_NONE:
+                                case OA_BOTTOMLEFT:  /* TILED DEFAULT */ /* TODO */  break;
+                                case OA_TOP:         /* TODO */ break;
+                                case OA_LEFT:        /* TODO */ break;
+                                case OA_BOTTOM:      /* TODO */ break;
+                                case OA_RIGHT:       /* TODO */ break;
+                                case OA_TOPRIGHT:    /* TODO */ break;
+                                case OA_BOTTOMRIGHT: /* TODO */ break;
+                                case OA_CENTER:      /* TODO */ break;
+                            }
                             callback(collision, HandleTMXCollision(&copy), userdata);
                         } while ((collision = collision->next));
                     }
@@ -739,9 +753,10 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                     }
                     switch (tile->tileset->objectalignment)
                     {
+                        // TODO: Rotated collisions shall be handled here
                         case OA_TOPLEFT: /*RAYLIB DEFAULT*/ break;
                         case OA_NONE:
-                        case OA_BOTTOMLEFT: { /* TILED DEFAULT */
+                        case OA_BOTTOMLEFT: /* TILED DEFAULT */ {
                             if (raylibCollision.type == COLLISION_RECT) {
                                 raylibCollision.rect.y -= (float) object->height;
                             }
@@ -764,6 +779,7 @@ void CollisionsTMXForeach(tmx_map *map, tmx_collision_functor callback, void* us
                         copy.y += object->y;
                         switch (tile->tileset->objectalignment)
                         {
+                            // TODO: Rotated collisions shall be handled here
                             case OA_TOPLEFT: /*RAYLIB DEFAULT*/ {
                                 if (is_horizontally_fliped) {
                                     int objectXOffset    = object->x + object->width;
