@@ -154,7 +154,6 @@ void* MemReallocTMX(void* address, size_t len) {
  * @return A TMX Tiled map object pointer.
  *
  * @see UnloadTMX()
- * @todo Add LoadTMXFromMemory() to allow loading through a buffer: https://github.com/baylej/tmx/pull/58
  */
 tmx_map* LoadTMX(const char* fileName) {
     // Register the TMX callbacks.
@@ -171,16 +170,33 @@ tmx_map* LoadTMX(const char* fileName) {
     }
     TraceLog(LOG_INFO, "TMX: Loaded %ix%i map", map->width, map->height);
     return map;
+}
 
-    // TODO: Load using a buffer instead: https://github.com/baylej/tmx/pull/58
-    // const char* fileText = LoadFileText(fileName);
-    // tmx_map* map = tmx_load_buffer_path(fileText, TextLength(fileText), fileName);
-    // if (!map) {
-    //     TraceLog(LOG_ERROR, "TMX: Failed to load TMX file %s", fileName);
-    //     return NULL;
-    // }
-    // TraceLog(LOG_INFO, "TMX: Loaded %ix%i map", map->width, map->height);
-    // return map;
+/**
+ * Loads given .tmx Tiled file.
+ *
+ * @param fileName The .tmx file to load.
+ *
+ * @return A TMX Tiled map object pointer.
+ *
+ * @see UnloadTMX()
+ */
+tmx_map* LoadTMXFromMemory(const char* fileName) {
+    // Register the TMX callbacks.
+    tmx_alloc_func = MemReallocTMX;
+    tmx_free_func = MemFree;
+    tmx_img_load_func = LoadTMXImage;
+	tmx_img_free_func = UnloadTMXImage;
+
+    const char* fileText = LoadFileText(fileName);
+    int textLenght = (int)TextLength(fileText);
+    tmx_map* map = tmx_load_buffer(fileText, textLenght);
+    if (!map) {
+        TraceLog(LOG_ERROR, "TMX: Failed to load TMX file %s", fileName);
+        return NULL;
+    }
+    TraceLog(LOG_INFO, "TMX: Loaded %ix%i map", map->width, map->height);
+    return map;
 }
 
 /**
