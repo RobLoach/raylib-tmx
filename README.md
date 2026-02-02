@@ -58,13 +58,22 @@ void DrawTMXLayer(tmx_map *map, tmx_layer *layers, int posX, int posY, Color tin
 void DrawTMXTile(tmx_tile* tile, int posX, int posY, Color tint);
 void DrawTMXObjectTile(tmx_tile* tile, int baseGid, Rectangle destRect, float rotation, Color tint);
 
-typedef union {
-    Rectangle rect;
-    Vector2   point;
-    struct {
-        double** points;
-        int count;
-    } polygon;
+typedef struct {
+    enum {
+        COLLISION_RECT,
+        COLLISION_POINT,
+        COLLISION_POLYGON,
+        COLLISION_POLYLINE,
+        COLLISION_ELLIPSE
+    } type;
+    union {
+        Rectangle rect;
+        Vector2   point;
+        struct {
+            double** points;
+            int count;
+        } polygon;
+    };
 } RaylibTMXCollision;
 
 typedef void (*tmx_collision_functor)(tmx_object *object, RaylibTMXCollision collision, void* userdata);
