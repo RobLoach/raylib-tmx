@@ -296,8 +296,8 @@ void DrawTMXText(tmx_text* text, Rectangle dest, Color tint) {
  */
 void DrawTMXLayerObjects(tmx_map *map, tmx_object_group *objgr, int posX, int posY, Color tint) {
 	tmx_object *head = objgr->head;
-	Color color = ColorFromTMX(objgr->color);
-    // TODO: Merge the tint
+	Color color = ColorTint(ColorFromTMX(objgr->color), tint);
+    // TODO: Merge the tint DONE
 
 	while (head) {
 		if (head->visible) {
